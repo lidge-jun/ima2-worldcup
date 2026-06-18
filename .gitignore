@@ -1,6 +1,10 @@
 node_modules/
 dist/
+.next/
 .env
 *.mp4
 *.gif
+*.mov
 output/
+test-assets/
+tsconfig.tsbuildinfo
