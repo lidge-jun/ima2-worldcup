@@ -8,7 +8,7 @@ ffmpeg.wasm + 프레임 추출 + 병렬 i2i 배치 생성 + GIF/MP4 조립
 - 비디오 업로드 지원 (MP4, WebM, MOV)
 - FPS 설정 UI 활성화 (0.33~3 fps)
 - 프레임 추출: 비디오 → N개 프레임 이미지
-- 병렬 배치 생성: N개 프레임 동시에 gpt-5.4-mini i2i
+- 완전 병렬 배치 생성: N개 프레임 전부 동시에 gpt-5.4-mini i2i (1장 ≈ N장 동일 시간)
 - 진행률 UI: "Frame 3/10 — crayon style..." + progress bar (candy stripe)
 - GIF 조립: 스타일된 프레임 → animated GIF (ffmpeg.wasm)
 - MP4 조립: 스타일된 프레임 → MP4 (ffmpeg.wasm, 선택 옵션)
@@ -32,9 +32,17 @@ ffmpeg.wasm + 프레임 추출 + 병렬 i2i 배치 생성 + GIF/MP4 조립
 7. 진행률 컴포넌트: 프레임 카운터 + candy stripe bar + 예상 시간
 8. 비디오 메타데이터 읽기 (duration, resolution, fps)
 
+## Parallelism Note
+N개 프레임을 전부 동시에 API 호출하면 1장 생성 시간과 거의 동일해야 함.
+병목은 API 호출이 아니라 rate limit 뿐. Rate limit 폴백:
+- 429 응답 시 exponential backoff + retry
+- 사용자 tier에 따라 동시 요청 수 자동 조절 (실 테스트에서 최적값 결정)
+- 최악의 경우에도 직렬이 아닌 최대 허용 병렬 유지
+
 ## Done Criteria
-- 10초 축구 하이라이트 MP4 → 1fps → 10 프레임 → 병렬 생성 → 크레용 GIF (~3분 이내)
-- 진행률이 실시간으로 업데이트
+- 10초 MP4 @ 1fps → 10 프레임 → 전부 동시 호출 → 1장 생성 시간과 비슷하게 완료
+- Rate limit 발생 시 자동 retry, 사용자에게 에러 아닌 "대기 중..." 표시
+- 진행률 실시간 업데이트
 - GIF 다운로드 가능
 
 ## Mockup

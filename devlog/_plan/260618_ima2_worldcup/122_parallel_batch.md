@@ -3,10 +3,11 @@
 ## Files: NEW
 ```
 lib/generate-batch.ts       — generateBatch(frames: Frame[], style, token, opts) → StyledFrame[]
-                              opts: { concurrency: 3, onProgress: (done, total, currentFrame) => void }
-                              Promise.allSettled with concurrency limiter (p-limit pattern)
-                              Each frame: POST /api/generate → styled B64
-                              Failed frames: retry 1x, then skip with error marker
+                              opts: { onProgress: (done, total, currentFrame) => void }
+                              Promise.allSettled — N개 전부 동시 호출 (concurrency limit 없음)
+                              1장 생성 시간 ≈ N장 생성 시간 (완전 병렬)
+                              Rate limit(429) 시: exponential backoff + retry (최대 3회)
+                              실 테스트에서 병렬 수 조절 필요 시 p-limit 추가
 
 components/FrameStrip.tsx   — 가로 스크롤 프레임 스트립
                               각 프레임: 60x40px 썸네일
