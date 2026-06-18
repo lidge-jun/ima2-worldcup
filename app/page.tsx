@@ -139,7 +139,6 @@ export default function Home() {
 
     processingRef.current = true;
     setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'generating' as const } : j));
-    setSelectedGallery(null);
 
     processJob(next).then(async (result) => {
       setJobs(prev => prev.map(j => j.id === next.id ? { ...j, ...result, status: 'done' as const, completedAt: Date.now() } : j));
