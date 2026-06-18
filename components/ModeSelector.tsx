@@ -6,7 +6,7 @@ type Mode = 'image' | 'frames' | 'single' | 'v2v';
 
 const MODES: { id: Mode; label: string; icon: React.ElementType; locked: boolean }[] = [
   { id: 'image', label: 'Image', icon: Image, locked: false },
-  { id: 'frames', label: 'Frames→GIF', icon: Film, locked: true },
+  { id: 'frames', label: 'Frames→GIF', icon: Film, locked: false },
   { id: 'single', label: 'Video→1pic', icon: Camera, locked: true },
   { id: 'v2v', label: 'Grok V2V', icon: Clapperboard, locked: true },
 ];

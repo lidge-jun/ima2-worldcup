@@ -24,6 +24,8 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "lucide-react": "^1.21.0",
     "next": "^16.2.9",
     "pretendard": "^1.3.9",
