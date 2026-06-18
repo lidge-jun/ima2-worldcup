@@ -6,7 +6,7 @@ type Mode = 'image' | 'frames' | 'single' | 'v2v';
 
 const MODES: { id: Mode; label: string; icon: React.ElementType; badge?: string; needsVideo?: boolean; needsImage?: boolean }[] = [
   { id: 'image', label: 'Image', icon: Image, needsImage: true },
-  { id: 'frames', label: 'Frames→GIF', icon: Film, needsVideo: true },
+  { id: 'frames', label: 'Frames→MP4', icon: Film, needsVideo: true },
   { id: 'single', label: 'Video→1pic', icon: Camera, needsVideo: true },
   { id: 'v2v', label: 'Grok V2V', icon: Clapperboard, badge: 'GROK', needsVideo: true },
 ];
