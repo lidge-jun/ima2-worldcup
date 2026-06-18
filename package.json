@@ -1,19 +1,15 @@
 {
-  "name": "reframe",
+  "name": "ima2-worldcup",
   "version": "0.1.0",
-  "description": "AI style transfer for sports highlights — copyright-safe art from video/image clips",
+  "description": "AI style transfer for sports highlights — turn World Cup clips into copyright-safe crayon/watercolor art",
   "type": "module",
-  "main": "dist/index.js",
-  "bin": {
-    "reframe": "dist/bin/reframe.js"
-  },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsx src/bin/reframe.ts",
-    "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "keywords": ["ai", "style-transfer", "ima2", "video", "image", "copyright"],
+  "keywords": ["ai", "style-transfer", "ima2", "worldcup", "sports", "copyright", "gpt-image", "grok"],
   "license": "MIT",
   "engines": {
     "node": ">=20"
