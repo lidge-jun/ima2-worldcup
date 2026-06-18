@@ -302,12 +302,22 @@ export default function Home() {
     setJobs(prev => [...prev, job]);
   };
 
+  const handleGallerySelect = (item: GalleryItem) => {
+    setSelectedGallery(item);
+    if (item.resultB64) {
+      setResultB64(item.resultB64);
+      setResultKind('image');
+      setPreviewState('done');
+      setGifUrl(''); setVideoUrl('');
+    }
+  };
+
   const canGenerate = hasToken && !!file;
   const currentPreviewState: PreviewState = !hasToken ? 'auth-required' : previewState;
 
   return (
     <div className={`h-[100dvh] grid ${isMobile ? 'grid-cols-[1fr]' : 'grid-cols-[200px_1fr_220px]'}`}>
-      {!isMobile && <Gallery onSelect={setSelectedGallery} selectedId={selectedGallery?.id} />}
+      {!isMobile && <Gallery onSelect={handleGallerySelect} selectedId={selectedGallery?.id} />}
 
       <main className="flex flex-col overflow-hidden">
         <Header>
@@ -409,10 +419,9 @@ export default function Home() {
 
       {!isMobile && <QueuePanel jobs={jobs} onCancel={cancelJob} />}
 
-      {isMobile && showGallery && <Gallery onSelect={(item) => { setSelectedGallery(item); setShowGallery(false); }} selectedId={selectedGallery?.id} overlay onClose={() => setShowGallery(false)} />}
+      {isMobile && showGallery && <Gallery onSelect={(item) => { handleGallerySelect(item); setShowGallery(false); }} selectedId={selectedGallery?.id} overlay onClose={() => setShowGallery(false)} />}
       {isMobile && showQueue && <QueuePanel jobs={jobs} onCancel={cancelJob} overlay onClose={() => setShowQueue(false)} />}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onSave={handleToken} />}
-      {selectedGallery && <GalleryPreview item={selectedGallery} onClose={() => setSelectedGallery(null)} onRegenerate={handleGalleryRegenerate} onRestyle={handleGalleryRestyle} />}
     </div>
   );
 }
