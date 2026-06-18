@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phase 4 — Launch</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#fffbe6;color:#111;min-height:100vh}
+.tag{position:fixed;top:12px;right:12px;background:#111;color:#fffbe6;padding:4px 12px;font-size:11px;font-weight:800;letter-spacing:1px;z-index:99}
+/* Hero */
+.hero{background:#ff6b6b;border-bottom:3px solid #111;padding:60px 20px 50px;text-align:center}
+.hero-logo{font-size:48px;font-weight:900;margin-bottom:8px}.hero-logo span{background:#111;color:#ff6b6b;padding:0 10px}
+.hero-sub{font-size:16px;font-weight:700;max-width:500px;margin:0 auto 24px}
+.hero-cta{display:inline-flex;gap:12px}
+.btn{padding:10px 24px;border:3px solid #111;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 0 #111}
+.btn.big{padding:14px 32px;font-size:16px;box-shadow:6px 6px 0 #111}
+.btn.p{background:#111;color:#fffbe6}
+.btn.w{background:#fffbe6}
+.btn.accent{background:#6c5ce7;color:#fff}
+/* Before/After */
+.ba-section{max-width:800px;margin:40px auto;padding:0 20px}
+.ba-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:16px}
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+.ba-card{border:3px solid #111;box-shadow:6px 6px 0 #111;overflow:hidden}
+.ba-card .tag-label{padding:6px 12px;background:#111;color:#fffbe6;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.ba-card canvas{width:100%;height:200px;display:block}
+.ba-arrow{font-size:36px;font-weight:900}
+/* Features */
+.features{max-width:800px;margin:40px auto;padding:0 20px}
+.feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.feat{border:3px solid #111;padding:16px;background:#fff;box-shadow:4px 4px 0 #111;text-align:center}
+.feat .icon{font-size:32px;margin-bottom:8px}
+.feat .title{font-size:13px;font-weight:800;margin-bottom:4px}
+.feat .desc{font-size:10px;color:#666;font-weight:600}
+/* Footer */
+.footer{border-top:3px solid #111;padding:20px;text-align:center;margin-top:40px;background:#111;color:#fffbe6}
+.footer a{color:#ff6b6b;text-decoration:none;font-weight:800}
+.footer .ver{font-size:10px;color:#666;margin-top:4px}
+/* Nav */
+.nav{position:fixed;top:0;left:0;right:0;background:#fffbe6;border-bottom:3px solid #111;padding:8px 20px;display:flex;align-items:center;gap:12px;z-index:90}
+.nav-logo{font-size:18px;font-weight:900}.nav-logo span{background:#111;color:#ff6b6b;padding:0 4px}
+.nav-r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.nav-link{font-size:12px;font-weight:800;text-decoration:none;color:#111;padding:4px 8px}
+.nav-link:hover{background:#ffeaa7}
+</style></head><body>
+<div class="tag">PHASE 4 · LAUNCH</div>
+<div class="nav">
+  <div class="nav-logo">ima2-<span>worldcup</span></div>
+  <div class="nav-r">
+    <a class="nav-link" href="#">Features</a>
+    <a class="nav-link" href="#">GitHub</a>
+    <a class="nav-link" href="#">Docs</a>
+    <button class="btn p" style="font-size:11px;padding:5px 14px;box-shadow:2px 2px 0 #111">Launch App →</button>
+  </div>
+</div>
+
+<div style="height:40px"></div>
+<div class="hero">
+  <div class="hero-logo">ima2-<span>worldcup</span></div>
+  <div class="hero-sub">Turn sports highlights into copyright-safe art with AI. Upload a clip, pick a style, share everywhere.</div>
+  <div class="hero-cta">
+    <button class="btn big p">Try Now — Free</button>
+    <button class="btn big w">GitHub</button>
+  </div>
+</div>
+
+<div class="ba-section">
+  <div class="ba-label">Before → After</div>
+  <div class="ba">
+    <div class="ba-card"><div class="tag-label">Original</div><canvas id="c1"></canvas></div>
+    <div class="ba-arrow">→</div>
+    <div class="ba-card"><div class="tag-label">Crayon Style</div><canvas id="c2"></canvas></div>
+  </div>
+</div>
+
+<div class="features">
+  <div class="feat-grid">
+    <div class="feat"><div class="icon">🖼️</div><div class="title">Image</div><div class="desc">1장 업로드,<br>1장 변환</div></div>
+    <div class="feat"><div class="icon">🎞️</div><div class="title">Video→GIF</div><div class="desc">프레임별 병렬 변환<br>~3분 완성</div></div>
+    <div class="feat"><div class="icon">📸</div><div class="title">Keyframe</div><div class="desc">영상 베스트샷<br>1장 추출</div></div>
+    <div class="feat"><div class="icon">🎬</div><div class="title">Grok V2V</div><div class="desc">영상 전체<br>AI 변환</div></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div>Open Source · <a href="#">MIT License</a> · Made with ima2-gen engine</div>
+  <div class="ver">v1.0.0 · ima2-worldcup.lidge.dev</div>
+</div>
+
+<script>
+function drawOriginal(c){const x=c.getContext('2d');c.width=380;c.height=200;
+x.fillStyle='#1a5fb4';x.fillRect(0,0,380,70);x.fillStyle='#111';x.fillRect(0,55,380,18);
+x.fillStyle='#2d8a4e';x.fillRect(0,73,380,127);
+x.strokeStyle='#fff';x.lineWidth=1;x.setLineDash([4,4]);x.beginPath();x.moveTo(0,130);x.lineTo(380,130);x.stroke();x.setLineDash([]);
+[{x:80,y:110,c:'#fff'},{x:180,y:140,c:'#fff'},{x:300,y:100,c:'#fff'},{x:130,y:160,c:'#2d8a4e'},{x:250,y:130,c:'#2d8a4e'},{x:200,y:135,c:'#fbbf24'}].forEach(p=>{x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,p.c==='#fbbf24'?3:5,0,Math.PI*2);x.fill()})}
+function drawStyled(c){const x=c.getContext('2d');c.width=380;c.height=200;
+x.fillStyle='#2563eb';x.fillRect(0,0,380,70);
+for(let i=0;i<60;i++){x.fillStyle=['#ef4444','#3b82f6','#fbbf24','#22c55e','#f472b6'][~~(Math.random()*5)];x.beginPath();x.arc(Math.random()*380,Math.random()*45+10,2+Math.random()*3,0,Math.PI*2);x.fill()}
+x.fillStyle='#1e293b';x.fillRect(0,55,380,18);
+for(let y=73;y<200;y+=2)for(let i=0;i<380;i+=3){x.fillStyle=`rgb(${30+Math.random()*20},${120+Math.random()*40},${20+Math.random()*15})`;x.fillRect(i,y,3,2)}
+[{x:80,y:110,c:'#dbeafe'},{x:180,y:140,c:'#dbeafe'},{x:300,y:100,c:'#dbeafe'},{x:130,y:160,c:'#86efac'},{x:250,y:130,c:'#86efac'},{x:200,y:135,c:'#fcd34d'}].forEach(p=>{x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,p.c==='#fcd34d'?4:6,0,Math.PI*2);x.fill()})}
+drawOriginal(document.getElementById('c1'));drawStyled(document.getElementById('c2'));
+</script></body></html>

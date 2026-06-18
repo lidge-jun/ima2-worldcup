@@ -1,0 +1,70 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phase 1 — Foundation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#fffbe6;color:#111;min-height:100vh}
+.tag{position:fixed;top:12px;right:12px;background:#111;color:#fffbe6;padding:4px 12px;font-size:11px;font-weight:800;letter-spacing:1px;z-index:99}
+.app{max-width:960px;margin:0 auto;padding:20px}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding:14px 18px;background:#ff6b6b;border:3px solid #111;box-shadow:6px 6px 0 #111}
+.logo{font-size:26px;font-weight:900}.logo span{background:#111;color:#ff6b6b;padding:0 6px}
+.tagline{font-size:11px;font-weight:700;opacity:0.7}
+.hdr-r{margin-left:auto;display:flex;gap:8px}
+.btn{padding:8px 16px;border:3px solid #111;background:#fffbe6;font-weight:800;font-size:12px;cursor:pointer;box-shadow:3px 3px 0 #111}
+.btn.p{background:#111;color:#fffbe6}
+.btn.disabled{opacity:0.35;cursor:not-allowed}
+.main{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{border:3px solid #111;box-shadow:6px 6px 0 #111}
+.ph{padding:10px 16px;background:#111;color:#fffbe6;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.pb{padding:16px}
+.upload{border:3px dashed #111;padding:36px 16px;text-align:center;cursor:pointer;background:#fff}
+.upload:hover{background:#ffeaa7}
+.ui{font-size:36px;margin-bottom:6px}.ut{font-size:14px;font-weight:800}.us{font-size:10px;color:#666;margin-top:4px;font-weight:600}
+.sl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.m{padding:10px;border:3px solid #111;text-align:center;font-weight:800;font-size:11px;background:#fff}
+.m.on{background:#a29bfe;box-shadow:3px 3px 0 #111}
+.m.lock{opacity:0.3;cursor:not-allowed;position:relative}
+.m.lock::after{content:'🔒';position:absolute;top:4px;right:6px;font-size:10px}
+.me{font-size:20px;display:block;margin-bottom:2px}
+.sr{display:flex;flex-wrap:wrap;gap:6px}
+.ch{padding:6px 14px;border:3px solid #111;font-weight:800;font-size:11px;cursor:pointer;background:#fff}
+.ch.on{background:#fd79a8;box-shadow:2px 2px 0 #111}
+.gb{width:100%;padding:14px;border:3px solid #111;background:#6c5ce7;color:#fff;font-size:16px;font-weight:900;cursor:pointer;box-shadow:6px 6px 0 #111;margin-top:16px;text-transform:uppercase;letter-spacing:2px}
+.preview{min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;border:3px dashed #ccc}
+.auth-prompt{text-align:center;padding:20px}
+.auth-prompt .icon{font-size:48px;margin-bottom:8px}
+.auth-prompt p{font-size:13px;font-weight:700;color:#666;margin-bottom:12px}
+.result{width:100%;text-align:center}
+.result canvas{width:100%;height:240px;border:3px solid #111}
+.result .dl{display:flex;gap:6px;margin-top:10px}
+.result .dl .btn{flex:1;font-size:11px;padding:8px}
+</style></head><body>
+<div class="tag">PHASE 1 · FOUNDATION</div>
+<div class="app">
+  <div class="header"><div><div class="logo">ima2-<span>worldcup</span></div><div class="tagline">AI Style Transfer for Sports Highlights</div></div><div class="hdr-r"><button class="btn">GitHub</button><button class="btn p">Sign In</button></div></div>
+  <div class="main">
+    <div>
+      <div class="panel" style="margin-bottom:14px"><div class="ph">Upload</div><div class="pb">
+        <div class="upload"><div class="ui">🖼️</div><div class="ut">Drop image here</div><div class="us">PNG · JPG · WebP — max 10MB (video in Phase 2)</div></div>
+      </div></div>
+      <div class="panel"><div class="ph">Settings</div><div class="pb">
+        <div class="sl">Mode</div>
+        <div class="mg">
+          <div class="m on"><span class="me">🖼️</span>Image</div>
+          <div class="m lock"><span class="me">🎞️</span>Frames→GIF</div>
+          <div class="m lock"><span class="me">📸</span>Video→1pic</div>
+          <div class="m lock"><span class="me">🎬</span>Grok V2V</div>
+        </div>
+        <div class="sl">Style</div>
+        <div class="sr">
+          <div class="ch on">Crayon</div><div class="ch">Watercolor</div><div class="ch">Oil</div><div class="ch">Sketch</div><div class="ch">Anime</div><div class="ch">Custom</div>
+        </div>
+        <button class="gb">Generate</button>
+      </div></div>
+    </div>
+    <div class="panel"><div class="ph">Preview</div><div class="pb">
+      <div class="preview">
+        <div class="auth-prompt"><div class="icon">🔑</div><p>Sign in with Codex OAuth<br>to start generating</p><button class="btn p" style="font-size:13px;padding:10px 24px">Connect Codex Account</button></div>
+      </div>
+    </div></div>
+  </div>
+</div></body></html>
