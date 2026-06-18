@@ -3,34 +3,33 @@
 <body>
 <h2>FFmpeg WASM Test (local /ffmpeg/)</h2>
 <pre id="log">Starting...</pre>
-<script>
+<script type="module">
 const log = s => { document.getElementById('log').textContent += '\n' + s; console.log(s); };
-(async () => {
-  try {
-    log('crossOriginIsolated: ' + crossOriginIsolated);
-    log('loading ffmpeg from /ffmpeg/ ...');
+try {
+  log('crossOriginIsolated: ' + crossOriginIsolated);
+  log('importing FFmpeg from /ffmpeg/index.js...');
 
-    // Use UMD approach - importScripts in worker will use local files
-    const { FFmpeg } = await import('/ffmpeg/index.js');
-    const f = new FFmpeg();
-    f.on('log', ({ message }) => log('[ff] ' + message));
-    log('calling load() with local core...');
-    await f.load({
-      coreURL: '/ffmpeg/ffmpeg-core.js',
-      wasmURL: '/ffmpeg/ffmpeg-core.wasm',
-    });
-    log('✅ FFmpeg LOADED SUCCESSFULLY');
+  const { FFmpeg } = await import('/ffmpeg/index.js');
+  log('FFmpeg class imported OK');
 
-    // Quick test: write + exec
-    const testData = new Uint8Array([0]);
-    await f.writeFile('test.bin', testData);
-    await f.deleteFile('test.bin');
-    log('✅ FS write/delete test passed');
-  } catch (e) {
-    log('❌ ERROR: ' + e.message);
-    console.error(e);
-  }
-})();
+  const f = new FFmpeg();
+  f.on('log', ({ message }) => log('[ff] ' + message));
+
+  log('calling load() with /ffmpeg/ffmpeg-core.js ...');
+  await f.load({
+    coreURL: '/ffmpeg/ffmpeg-core.js',
+    wasmURL: '/ffmpeg/ffmpeg-core.wasm',
+  });
+  log('✅ FFmpeg LOADED SUCCESSFULLY');
+
+  const testData = new Uint8Array([0]);
+  await f.writeFile('test.bin', testData);
+  await f.deleteFile('test.bin');
+  log('✅ FS write/delete test passed');
+} catch (e) {
+  log('❌ ERROR: ' + (e?.message || e));
+  console.error('Full error:', e);
+}
 </script>
 </body>
 </html>
