@@ -18,6 +18,7 @@ export async function extractKeyframes(file: File, count = 5): Promise<Frame[]> 
       '-ss', String(timestamp),
       '-i', inputName,
       '-frames:v', '1',
+      '-vf', `scale='min(1024,iw)':'-1':flags=lanczos`,
       '-f', 'image2',
       outName,
     ]);

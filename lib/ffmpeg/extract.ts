@@ -12,7 +12,7 @@ export async function extractFrames(file: File, fps: number): Promise<Frame[]> {
   console.log('[extract] running ffmpeg exec...');
   const exitCode = await ffmpeg.exec([
     '-i', inputName,
-    '-vf', `fps=${fps}`,
+    '-vf', `fps=${fps},scale='min(1024,iw)':'-1':flags=lanczos`,
     '-f', 'image2',
     'frame_%04d.png',
   ]);
