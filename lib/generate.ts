@@ -22,7 +22,10 @@ export async function generateImage(
     : 'image/webp';
 
   const baseUrl = authMode === 'proxy' ? OAUTH_PROXY : OPENAI_API;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+  };
   if (authMode === 'apikey' && token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -43,28 +46,63 @@ export async function generateImage(
       ],
       tools: [{ type: 'image_generation', quality: 'low', size: '1024x1024' }],
       tool_choice: { type: 'image_generation' },
+      reasoning: { effort: 'low' },
+      stream: true,
     }),
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     let msg = `OpenAI error ${res.status}`;
-    try {
-      const parsed = JSON.parse(text);
-      msg = parsed?.error?.message || msg;
-    } catch {}
+    try { msg = JSON.parse(text)?.error?.message || msg; } catch {}
     throw new Error(msg);
   }
 
-  const data = await res.json();
-  const output = data?.output;
-  if (!Array.isArray(output)) throw new Error('Unexpected response shape');
+  return parseSSEForImage(res);
+}
 
-  for (const item of output) {
-    if (item.type === 'image_generation_call' && item.result) {
-      return item.result;
+async function parseSSEForImage(res: Response): Promise<string> {
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('No response body');
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let resultB64 = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const payload = line.slice(6).trim();
+      if (payload === '[DONE]') continue;
+
+      try {
+        const event = JSON.parse(payload);
+
+        if (event.type === 'response.output_item.done' &&
+            event.item?.type === 'image_generation_call' &&
+            event.item?.result) {
+          resultB64 = event.item.result;
+        }
+
+        if (event.type === 'response.completed' &&
+            event.response?.output) {
+          for (const item of event.response.output) {
+            if (item.type === 'image_generation_call' && item.result) {
+              resultB64 = item.result;
+            }
+          }
+        }
+      } catch {}
     }
   }
 
-  throw new Error('No image in response');
+  if (!resultB64) throw new Error('No image in SSE stream');
+  return resultB64;
 }
