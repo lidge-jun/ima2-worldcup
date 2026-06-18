@@ -1,6 +1,7 @@
 'use client';
 
-const FPS_STEPS = [1, 2, 3, 4, 5];
+const FPS_STEPS = [0.2, 0.33, 0.5, 1, 2, 3, 4, 5];
+const FPS_LABELS: Record<number, string> = { 0.2: '1/5s', 0.33: '1/3s', 0.5: '1/2s' };
 
 export default function FpsSlider({ fps, onFps, duration }: {
   fps: number;
@@ -23,7 +24,7 @@ export default function FpsSlider({ fps, onFps, duration }: {
         className="flex-1"
         style={{ accentColor: 'var(--text)' }}
       />
-      <span className="text-sm font-black min-w-[24px] text-right">{FPS_STEPS[current]}</span>
+      <span className="text-sm font-black min-w-[32px] text-right">{FPS_LABELS[FPS_STEPS[current]] || FPS_STEPS[current]}</span>
       {duration > 0 && (
         <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap">
           → {frameCount} frames
