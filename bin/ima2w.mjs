@@ -33,15 +33,7 @@ if (cmd === 'serve') {
   const port = portIdx >= 0 ? args[portIdx + 1] : '3477';
   const oauthPort = '10531';
 
-  // Find server.js — may be nested if Next.js inferred a workspace root
-  let standalonePath = join(ROOT, '.next', 'standalone', 'server.js');
-  if (!existsSync(standalonePath)) {
-    const { execSync: ex } = await import('node:child_process');
-    try {
-      const found = ex(`find "${join(ROOT, '.next', 'standalone')}" -name server.js -not -path "*/node_modules/*" -type f`, { encoding: 'utf8' }).trim().split('\n')[0];
-      if (found) standalonePath = found;
-    } catch {}
-  }
+  const standalonePath = join(ROOT, '.next', 'standalone', 'server.js');
   const useStandalone = existsSync(standalonePath);
 
   if (useStandalone) {
@@ -72,7 +64,7 @@ if (cmd === 'serve') {
   // Try starting openai-oauth proxy (graceful degradation — B2 fix)
   let proxyAvailable = false;
   try {
-    const which = execSync('which openai-oauth 2>/dev/null || npx --yes openai-oauth --version 2>/dev/null', { timeout: 5000, stdio: 'pipe' });
+    execSync('which openai-oauth', { timeout: 3000, stdio: 'pipe' });
     proxyAvailable = true;
   } catch {}
 
@@ -90,7 +82,7 @@ if (cmd === 'serve') {
   // Start Next.js
   if (useStandalone) {
     const server = spawn(process.execPath, [standalonePath], {
-      cwd: dirname(standalonePath),
+      cwd: join(ROOT, '.next', 'standalone'),
       stdio: 'inherit',
       env: { ...process.env, PORT: port, HOSTNAME: '0.0.0.0' },
     });

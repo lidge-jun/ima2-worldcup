@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  outputFileTracingRoot: process.cwd(),
   serverExternalPackages: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
   async headers() {
     return [
