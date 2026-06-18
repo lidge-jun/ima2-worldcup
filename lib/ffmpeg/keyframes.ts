@@ -1,10 +1,10 @@
-import { fetchFile } from '@ffmpeg/util';
 import { getFFmpeg } from './worker';
 import type { Frame } from './types';
 
 export async function extractKeyframes(file: File, count = 5): Promise<Frame[]> {
   const ffmpeg = await getFFmpeg();
 
+  const { fetchFile } = await import('@ffmpeg/util');
   const inputName = 'kf_input' + getExtension(file.name);
   await ffmpeg.writeFile(inputName, await fetchFile(file));
 

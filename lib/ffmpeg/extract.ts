@@ -1,10 +1,10 @@
-import { fetchFile } from '@ffmpeg/util';
 import { getFFmpeg } from './worker';
 import type { Frame } from './types';
 
 export async function extractFrames(file: File, fps: number): Promise<Frame[]> {
   console.log(`[extract] start: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) @ ${fps}fps`);
   const ffmpeg = await getFFmpeg();
+  const { fetchFile } = await import('@ffmpeg/util');
 
   const inputName = 'input' + getExtension(file.name);
   console.log('[extract] writing file to ffmpeg FS...');

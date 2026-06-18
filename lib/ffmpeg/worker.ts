@@ -1,16 +1,14 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL } from '@ffmpeg/util';
+let ffmpeg: any = null;
+let loadPromise: Promise<any> | null = null;
 
-let ffmpeg: FFmpeg | null = null;
-let loadPromise: Promise<FFmpeg> | null = null;
-
-const BASE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm';
+const CORE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js';
+const WASM_URL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm';
 
 export function checkCrossOriginIsolated(): boolean {
   return typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
 }
 
-export async function getFFmpeg(): Promise<FFmpeg> {
+export async function getFFmpeg(): Promise<any> {
   if (ffmpeg) return ffmpeg;
   if (loadPromise) return loadPromise;
 
@@ -19,18 +17,21 @@ export async function getFFmpeg(): Promise<FFmpeg> {
       throw new Error('SharedArrayBuffer not available. COOP/COEP headers required.');
     }
 
-    console.log('[ffmpeg] loading core from CDN...');
+    console.log('[ffmpeg] loading...');
+
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+    const { toBlobURL } = await import('@ffmpeg/util');
+
     const instance = new FFmpeg();
 
-    instance.on('log', ({ message }) => {
+    instance.on('log', ({ message }: { message: string }) => {
       console.log('[ffmpeg]', message);
     });
 
     try {
-      await instance.load({
-        coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
-      });
+      const coreURL = await toBlobURL(CORE_URL, 'text/javascript');
+      const wasmURL = await toBlobURL(WASM_URL, 'application/wasm');
+      await instance.load({ coreURL, wasmURL });
     } catch (err) {
       loadPromise = null;
       console.error('[ffmpeg] load failed:', err);
