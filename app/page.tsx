@@ -53,6 +53,7 @@ export default function Home() {
   const [resultKind, setResultKind] = useState<'image' | 'gif' | 'video'>('image');
   const [gifUrl, setGifUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const downloadBlobRef = useRef<Blob | null>(null);
   const [styledFrames, setStyledFrames] = useState<StyledFrame[]>([]);
   const [progress, setProgress] = useState<{ current: number; total: number } | undefined>();
   const [grokStage, setGrokStage] = useState<V2VProgress | undefined>();
@@ -226,7 +227,7 @@ export default function Home() {
       const { assembleVideo } = await import('@/lib/ffmpeg/assemble');
       const vBlob = await assembleVideo(blobs, job.fps, job.id);
       const url = URL.createObjectURL(vBlob);
-      if (isActiveJob(job.id)) { setVideoUrl(url); setPreviewState('done'); }
+      if (isActiveJob(job.id)) { setVideoUrl(url); downloadBlobRef.current = vBlob; setPreviewState('done'); }
       return { videoUrl: url, videoBlob: vBlob, resultB64: doneFrames[0]?.styledB64 };
     }
 
@@ -265,8 +266,17 @@ export default function Home() {
 
   const handleDownload = () => {
     const a = document.createElement('a');
-    if (resultKind === 'video' && videoUrl) { a.href = videoUrl; a.download = `ima2wc-${style}.mp4`; }
-    else if (resultKind === 'gif' && gifUrl) { a.href = gifUrl; a.download = `ima2wc-${style}.gif`; }
+    if (resultKind === 'video' && downloadBlobRef.current) {
+      const freshUrl = URL.createObjectURL(downloadBlobRef.current);
+      a.href = freshUrl; a.download = `ima2wc-${style}.mp4`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(freshUrl), 1000);
+      return;
+    }
+    if (resultKind === 'gif' && gifUrl) { a.href = gifUrl; a.download = `ima2wc-${style}.gif`; }
     else if (resultB64) { a.href = `data:image/png;base64,${resultB64}`; a.download = `ima2wc-${style}.png`; }
     else return;
     a.style.display = 'none';
@@ -310,6 +320,7 @@ export default function Home() {
       const url = URL.createObjectURL(item.videoBlob);
       setVideoUrl(url); setGifUrl(''); setResultB64(item.resultB64 || '');
       setResultKind('video');
+      downloadBlobRef.current = item.videoBlob;
     } else if (item.resultB64) {
       setResultB64(item.resultB64);
       setResultKind('image');
