@@ -1,18 +1,37 @@
 # Phase 3.3 — Prompt Polish (스케치북 느낌 강화)
 
-## Goal
-변환 결과가 진짜 스케치북에 그린 것 같도록 프롬프트 + 후처리 개선
+## Confirmed Decisions
+- 점수판: 손글씨 스타일로 교체 (각 화풍별 적용)
+- 방송사 로고: 프롬프트로 제거
+- 전체 스타일 프리셋에 공통 적용
 
-## Issues (사용자 피드백)
-1. **점수판**: 현재 그대로 유지됨 → 이미지 컨셉에 맞게 손글씨/크레용 스타일로 변환 필요
-2. **방송사 로고**: JTBC, FIFA 로고 등이 그대로 남음 → 완전히 제거하여 스케치북 느낌
+## Prompt Enhancement Strategy
 
-## Approach Options (Interview에서 확정)
-- 프롬프트 강화: "Remove all broadcast logos, TV overlays, and scoreboard graphics. Replace the scoreboard with hand-drawn text..."
-- 후처리: ffmpeg overlay로 로고 영역 마스킹?
-- 이미지 크롭: 점수판/로고 영역 자동 감지 후 제거?
+### 공통 접미사 (모든 스타일에 추가)
+```
+Remove all TV broadcast logos, channel watermarks, and overlay graphics completely.
+Replace any scoreboard or score display with hand-drawn text in the same art style,
+showing only the score numbers. Make it look like a page from a sketchbook —
+no digital/broadcast elements should remain.
+```
 
-## Open Questions
-- 프롬프트만으로 충분한지, 별도 전처리/후처리가 필요한지?
-- 점수판을 완전 제거 vs 크레용 스타일로 재작성?
-- 방송사 워터마크 위치가 고정인지 (상단 코너)?
+### 스타일별 점수판 지시
+- crayon: "hand-written in thick crayon letters"
+- watercolor: "painted in loose watercolor brush strokes"  
+- oil: "painted in oil with visible brushstrokes"
+- sketch: "sketched in pencil with rough handwriting"
+- anime: "drawn in manga speech-bubble style lettering"
+
+## Files
+```
+MODIFY: lib/styles.ts — 각 프리셋 프롬프트에 공통 접미사 추가 + 스타일별 점수판 지시
+```
+
+## Done Criteria
+- test-assets/arg-alg-frame.png 변환 시:
+  - JTBC/FIFA 로고 없음
+  - 점수판이 해당 화풍의 손글씨로 재현됨
+  - 전체적으로 스케치북에 그린 느낌
+
+## Verification
+- 동일 이미지로 crayon + watercolor 각 1장 변환 → 로고 없음 + 손글씨 점수판 확인
