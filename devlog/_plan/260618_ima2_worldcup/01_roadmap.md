@@ -1,4 +1,4 @@
-# ima2-worldcup — Roadmap (revised 260618)
+# ima2-worldcup — Roadmap (revised 260619)
 
 ## Phase 1: Foundation (PABCD #1) ✅ DONE
 **Goal**: Next.js scaffold + OAuth + single image-to-image
@@ -10,7 +10,7 @@
 - 6 style presets (crayon, watercolor, oil, sketch, anime, custom)
 - **Done**: tsc clean, next build pass, dev server verified
 
-## Phase 2: Video Pipeline (PABCD #2)
+## Phase 2: Video Pipeline (PABCD #2) ✅ DONE
 **Goal**: ffmpeg.wasm + frame extraction + parallel batch + GIF assembly
 
 - ffmpeg.wasm 브라우저 통합 (COOP/COEP 헤더 준비됨)
@@ -21,7 +21,7 @@
 - **Test**: `test-assets/arg-alg-clip.mov` (71MB, ARG vs ALG)
 - Sub-plans: 121 (ffmpeg.wasm), 122 (parallel batch)
 
-## Phase 3: Advanced Modes (PABCD #3)
+## Phase 3: Advanced Modes (PABCD #3) ✅ DONE
 **Goal**: Video → single image + Grok V2V, 4개 모드 전부 활성
 
 - 키프레임 피커 (5장 썸네일 선택)
