@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import 'pretendard/dist/web/static/pretendard.min.css';
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
 :root {
   --bg: #fffbe6;
