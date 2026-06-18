@@ -33,7 +33,15 @@ if (cmd === 'serve') {
   const port = portIdx >= 0 ? args[portIdx + 1] : '3477';
   const oauthPort = '10531';
 
-  const standalonePath = join(ROOT, '.next', 'standalone', 'server.js');
+  // Find server.js — may be nested if Next.js inferred a workspace root
+  let standalonePath = join(ROOT, '.next', 'standalone', 'server.js');
+  if (!existsSync(standalonePath)) {
+    const { execSync: ex } = await import('node:child_process');
+    try {
+      const found = ex(`find "${join(ROOT, '.next', 'standalone')}" -name server.js -not -path "*/node_modules/*" -type f`, { encoding: 'utf8' }).trim().split('\n')[0];
+      if (found) standalonePath = found;
+    } catch {}
+  }
   const useStandalone = existsSync(standalonePath);
 
   if (useStandalone) {
@@ -82,7 +90,7 @@ if (cmd === 'serve') {
   // Start Next.js
   if (useStandalone) {
     const server = spawn(process.execPath, [standalonePath], {
-      cwd: join(ROOT, '.next', 'standalone'),
+      cwd: dirname(standalonePath),
       stdio: 'inherit',
       env: { ...process.env, PORT: port, HOSTNAME: '0.0.0.0' },
     });

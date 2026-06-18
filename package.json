@@ -22,7 +22,7 @@
     "dev": "node scripts/dev.mjs",
     "dev:next": "next dev --port 3477",
     "build": "next build",
-    "postbuild": "node -e \"const{cpSync,existsSync}=require('fs');const s='.next/standalone';if(existsSync(s)){cpSync('.next/static',s+'/.next/static',{recursive:true});cpSync('public',s+'/public',{recursive:true});console.log('[postbuild] static+public copied to standalone')}\"",
+    "postbuild": "node -e \"const{cpSync,existsSync,readdirSync}=require('fs');const{execSync}=require('child_process');const s='.next/standalone';if(!existsSync(s))process.exit(0);const found=execSync('find .next/standalone -name server.js -not -path \\\"*/node_modules/*\\\" -type f',{encoding:'utf8'}).trim().split('\\n')[0];if(!found)process.exit(0);const d=require('path').dirname(found);cpSync('.next/static',d+'/.next/static',{recursive:true});cpSync('public',d+'/public',{recursive:true});console.log('[postbuild] copied to '+d)\"",
     "start": "next start",
     "lint": "next lint"
   },
