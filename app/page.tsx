@@ -273,7 +273,10 @@ export default function Home() {
     else if (resultKind === 'gif' && gifUrl) { a.href = gifUrl; a.download = `ima2wc-${style}.gif`; }
     else if (resultB64) { a.href = `data:image/png;base64,${resultB64}`; a.download = `ima2wc-${style}.png`; }
     else return;
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   const cancelJob = (id: string) => {

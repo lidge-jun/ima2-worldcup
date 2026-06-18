@@ -14,6 +14,7 @@ export async function assembleGif(styledBlobs: Blob[], fps: number): Promise<Blo
     '-framerate', String(fps),
     '-i', 'styled_%04d.png',
     '-vf', 'split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse',
+    '-loop', '0',
     'output.gif',
   ]);
 
