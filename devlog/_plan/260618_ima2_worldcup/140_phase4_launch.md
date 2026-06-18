@@ -34,8 +34,14 @@
 9. WASM 프리로드 + Service Worker 캐시
 10. OG 이미지 + SEO 메타
 
+## Sub-plans
+- 141_landing.md — 랜딩 페이지 + Before/After
+- 142_polish_release.md — 반응형 + History + Share + GitHub + 도메인
+- 143_cli_npm.md — CLI `ima2w serve` + npm global install + 로컬 토큰
+
 ## Done Criteria
 - 커스텀 도메인에서 누구나 접근 가능
+- `npm i -g ima2-worldcup && ima2w serve` → 로컬에서도 사용 가능
 - GitHub 퍼블릭 레포 + README + 스크린샷
 - 모바일에서 사용 가능
 - Share 버튼으로 결과 공유 가능
