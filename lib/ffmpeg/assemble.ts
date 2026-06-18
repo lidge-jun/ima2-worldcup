@@ -17,7 +17,7 @@ export async function assembleVideo(styledBlobs: Blob[], fps: number, jobId = ''
   ]);
 
   const data = await ffmpeg.readFile(outName) as Uint8Array;
-  const blob = new Blob([data.buffer as ArrayBuffer], { type: 'video/mp4' });
+  const blob = new Blob([(data.buffer as ArrayBuffer).slice(data.byteOffset, data.byteOffset + data.byteLength)], { type: 'video/mp4' });
 
   await cleanupFrames(ffmpeg, styledBlobs.length, pfx);
   await ffmpeg.deleteFile(outName);
@@ -51,7 +51,7 @@ export async function assembleGif(styledBlobs: Blob[], fps: number, jobId = ''):
   ]);
 
   const data = await ffmpeg.readFile(outName) as Uint8Array;
-  const blob = new Blob([data.buffer as ArrayBuffer], { type: 'image/gif' });
+  const blob = new Blob([(data.buffer as ArrayBuffer).slice(data.byteOffset, data.byteOffset + data.byteLength)], { type: 'image/gif' });
 
   await cleanupFrames(ffmpeg, styledBlobs.length, pfx);
   await ffmpeg.deleteFile(paletteName).catch(() => {});

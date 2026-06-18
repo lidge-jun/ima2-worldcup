@@ -44,7 +44,7 @@ export async function generateBatch(
           }),
         });
 
-        if (res.status === 429 && retryCount < MAX_RETRIES) {
+        if ((res.status === 429 || res.status >= 500) && retryCount < MAX_RETRIES) {
           const delay = RETRY_BASE_MS * Math.pow(2, retryCount);
           await sleep(delay);
           return processFrame(idx, retryCount + 1);
