@@ -350,9 +350,7 @@ export default function Home() {
               </span>
             </div>
             <div className="p-3">
-              {selectedGallery ? (
-                <GalleryPreview item={selectedGallery} onClose={() => setSelectedGallery(null)} onRegenerate={handleGalleryRegenerate} onRestyle={handleGalleryRestyle} />
-              ) : previewState === 'generating' ? (
+              {previewState === 'generating' ? (
                 <div>
                   <GeneratingAnim label={progress ? `Frame ${progress.current}/${progress.total}` : 'Applying style...'} />
                   {styledFrames.length > 0 && (
@@ -393,6 +391,7 @@ export default function Home() {
       <QueuePanel jobs={jobs} onCancel={cancelJob} />
 
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onSave={handleToken} />}
+      {selectedGallery && <GalleryPreview item={selectedGallery} onClose={() => setSelectedGallery(null)} onRegenerate={handleGalleryRegenerate} onRestyle={handleGalleryRestyle} />}
     </div>
   );
 }
