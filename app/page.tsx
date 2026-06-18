@@ -201,7 +201,7 @@ export default function Home() {
     }
 
     if (job.mode === 'frames') {
-      setResultKind('gif');
+      setResultKind('video');
       const { extractFrames } = await import('@/lib/ffmpeg/extract');
       const extracted = await extractFrames(job.file, job.fps);
       const sf: StyledFrame[] = extracted.map(f => ({ ...f, status: 'pending' as const }));
@@ -224,12 +224,12 @@ export default function Home() {
         return new Blob([bytes], { type: 'image/png' });
       });
 
-      const { assembleGif } = await import('@/lib/ffmpeg/assemble');
-      const gifBlob = await assembleGif(blobs, job.fps);
-      const url = URL.createObjectURL(gifBlob);
-      setGifUrl(url);
+      const { assembleVideo } = await import('@/lib/ffmpeg/assemble');
+      const videoBlob = await assembleVideo(blobs, job.fps);
+      const url = URL.createObjectURL(videoBlob);
+      setVideoUrl(url);
       setPreviewState('done');
-      return { gifUrl: url, resultB64: doneFrames[0]?.styledB64 };
+      return { videoUrl: url, resultB64: doneFrames[0]?.styledB64 };
     }
 
     if (job.mode === 'single') {
