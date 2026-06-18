@@ -7,13 +7,15 @@ import type { StyledFrame } from '@/lib/ffmpeg/types';
 
 type PreviewState = 'idle' | 'auth-required' | 'generating' | 'done' | 'error';
 
-export default function PreviewPanel({ state, resultKind, resultB64, gifUrl, frames, progress, error, onDownload, onRetry, onAuth }: {
+export default function PreviewPanel({ state, resultKind, resultB64, gifUrl, videoUrl, frames, progress, grokStage, error, onDownload, onRetry, onAuth }: {
   state: PreviewState;
-  resultKind: 'image' | 'gif';
+  resultKind: 'image' | 'gif' | 'video';
   resultB64: string;
   gifUrl: string;
+  videoUrl: string;
   frames?: StyledFrame[];
   progress?: { current: number; total: number };
+  grokStage?: string;
   error: string;
   onDownload: () => void;
   onRetry: () => void;
@@ -56,9 +58,13 @@ export default function PreviewPanel({ state, resultKind, resultB64, gifUrl, fra
 
   if (state === 'done') {
     const isGif = resultKind === 'gif' && gifUrl;
+    const isVideo = resultKind === 'video' && videoUrl;
+    const dlLabel = isVideo ? 'Download MP4' : isGif ? 'Download GIF' : 'Download';
     return (
       <div>
-        {isGif ? (
+        {isVideo ? (
+          <video src={videoUrl} controls autoPlay loop className="w-full border-3 border-[var(--border)]" />
+        ) : isGif ? (
           <img src={gifUrl} alt="Styled GIF" className="w-full border-3 border-[var(--border)]" />
         ) : resultB64 ? (
           <img src={`data:image/png;base64,${resultB64}`} alt="Styled result" className="w-full border-3 border-[var(--border)]" />
@@ -68,7 +74,7 @@ export default function PreviewPanel({ state, resultKind, resultB64, gifUrl, fra
           <button className="neo-btn flex-1 text-center opacity-40" disabled>Retry</button>
           <button className="neo-btn flex-1 text-center opacity-40" disabled>Share</button>
           <button onClick={onDownload} className="neo-btn neo-btn-accent flex-1 text-center flex items-center justify-center gap-1.5">
-            <Download size={14} /> {isGif ? 'Download GIF' : 'Download'}
+            <Download size={14} /> {dlLabel}
           </button>
         </div>
       </div>
