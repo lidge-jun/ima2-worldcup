@@ -54,6 +54,7 @@ function Section({ label }: { label: string }) {
 function QueueItem({ job, onCancel, dimmed }: { job: Job; onCancel: (id: string) => void; dimmed?: boolean }) {
   const statusLabel = job.status === 'generating' && job.progress
     ? `Frame ${job.progress.current}/${job.progress.total}`
+    : job.status === 'generating' ? `Generating · ${job.style}`
     : job.status === 'queued' ? `Waiting · ${job.style}`
     : job.status === 'done' ? `Done · ${job.style}`
     : job.error || 'Error';
