@@ -1,28 +1,22 @@
 import { NextResponse } from 'next/server';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { homedir } from 'os';
+
+const OAUTH_PROXY = 'http://127.0.0.1:10531';
 
 export async function GET() {
-  const result: { codexToken?: string; grokToken?: string } = {};
+  const result: { proxyAvailable: boolean; authMode: 'proxy' | 'apikey' | 'none'; models?: string[] } = {
+    proxyAvailable: false,
+    authMode: 'none',
+  };
 
-  const codexPaths = [
-    join(process.env.CODEX_HOME || join(homedir(), '.codex'), 'auth.json'),
-    join(homedir(), '.chatgpt-local', 'auth.json'),
-    join(homedir(), '.config', 'codex', 'auth.json'),
-  ];
-
-  for (const p of codexPaths) {
-    if (!existsSync(p)) continue;
-    try {
-      const data = JSON.parse(readFileSync(p, 'utf-8'));
-      const token = data?.tokens?.access_token;
-      if (token && typeof token === 'string') {
-        result.codexToken = token;
-        break;
-      }
-    } catch {}
-  }
+  try {
+    const res = await fetch(`${OAUTH_PROXY}/v1/models`, { signal: AbortSignal.timeout(2000) });
+    if (res.ok) {
+      const data = await res.json();
+      result.proxyAvailable = true;
+      result.authMode = 'proxy';
+      result.models = data?.data?.map((m: { id: string }) => m.id) || [];
+    }
+  } catch {}
 
   return NextResponse.json(result);
 }

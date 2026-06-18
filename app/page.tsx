@@ -47,12 +47,11 @@ export default function Home() {
     const gt = getGrokToken();
     if (ct) setCodexToken(ct);
     if (gt) setGrokToken(gt);
-    if (!ct) {
-      fetch('/api/detect-auth').then(r => r.json()).then(d => {
-        if (d.codexToken) { saveCodexToken(d.codexToken); setCodexToken(d.codexToken); }
-        if (d.grokToken) { saveGrokToken(d.grokToken); setGrokToken(d.grokToken); }
-      }).catch(() => {});
-    }
+    fetch('/api/detect-auth').then(r => r.json()).then(d => {
+      if (d.proxyAvailable) {
+        setCodexToken('proxy');
+      }
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {

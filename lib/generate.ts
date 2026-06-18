@@ -1,14 +1,35 @@
-export async function generateImage(imageB64: string, prompt: string, token: string): Promise<string> {
+const OAUTH_PROXY = 'http://127.0.0.1:10531';
+const OPENAI_API = 'https://api.openai.com';
+
+export type AuthMode = 'proxy' | 'apikey';
+
+export async function detectAuthMode(): Promise<{ mode: AuthMode; available: boolean }> {
+  try {
+    const res = await fetch(`${OAUTH_PROXY}/v1/models`, { signal: AbortSignal.timeout(2000) });
+    if (res.ok) return { mode: 'proxy', available: true };
+  } catch {}
+  return { mode: 'apikey', available: false };
+}
+
+export async function generateImage(
+  imageB64: string,
+  prompt: string,
+  token: string,
+  authMode: AuthMode = 'proxy',
+): Promise<string> {
   const mime = imageB64.startsWith('/9j/') ? 'image/jpeg'
     : imageB64.startsWith('iVBOR') ? 'image/png'
     : 'image/webp';
 
-  const res = await fetch('https://api.openai.com/v1/responses', {
+  const baseUrl = authMode === 'proxy' ? OAUTH_PROXY : OPENAI_API;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (authMode === 'apikey' && token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${baseUrl}/v1/responses`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify({
       model: 'gpt-5.4-mini',
       input: [
