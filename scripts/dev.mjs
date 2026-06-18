@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PORT = process.env.PORT || 3477;
+const PORT = process.env.IMA2WC_PORT || 3477;
 const OAUTH_PORT = process.env.OAUTH_PORT || 10531;
 
 const procs = [];
