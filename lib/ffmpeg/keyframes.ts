@@ -1,42 +1,57 @@
-import { getFFmpeg } from './worker';
+import { runWithFFmpeg, type FFmpegAPI } from './worker';
 import type { Frame } from './types';
 
 export async function extractKeyframes(file: File, count = 5, jobId = ''): Promise<Frame[]> {
   const pfx = jobId ? `${jobId}_` : '';
-  const ffmpeg = await getFFmpeg();
-
-  const inputName = `${pfx}kf_input${getExtension(file.name)}`;
-  await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
-
   const duration = await getVideoDuration(file);
   const interval = duration / (count + 1);
 
-  const frames: Frame[] = [];
-  for (let i = 1; i <= count; i++) {
-    const timestamp = interval * i;
-    const outName = `${pfx}kf_${i}.png`;
-    await ffmpeg.exec([
-      '-ss', String(timestamp),
-      '-i', inputName,
-      '-frames:v', '1',
-      '-vf', `scale='min(1024,iw)':'-1':flags=lanczos`,
-      '-f', 'image2',
-      outName,
-    ]);
+  return runWithFFmpeg(async (ffmpeg) => {
+    const inputName = `${pfx}kf_input${getExtension(file.name)}`;
+    const frames: Frame[] = [];
 
     try {
-      const data = await ffmpeg.readFile(outName) as Uint8Array;
-      const buf = new ArrayBuffer(data.byteLength);
-      new Uint8Array(buf).set(data);
-      const blob = new Blob([buf], { type: 'image/png' });
-      const b64 = await blobToBase64(blob);
-      frames.push({ index: i - 1, timestamp, blob, b64 });
-      await ffmpeg.deleteFile(outName);
-    } catch {}
-  }
+      await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
 
-  await ffmpeg.deleteFile(inputName);
-  return frames;
+      for (let i = 1; i <= count; i++) {
+        const timestamp = interval * i;
+        const outName = getKeyframeName(pfx, i);
+        await ffmpeg.exec([
+          '-ss', String(timestamp),
+          '-i', inputName,
+          '-frames:v', '1',
+          '-vf', `scale='min(1024,iw)':'-1':flags=lanczos`,
+          '-f', 'image2',
+          outName,
+        ]);
+
+        try {
+          const data = await ffmpeg.readFile(outName) as Uint8Array;
+          const buf = new ArrayBuffer(data.byteLength);
+          new Uint8Array(buf).set(data);
+          const blob = new Blob([buf], { type: 'image/png' });
+          const b64 = await blobToBase64(blob);
+          frames.push({ index: i - 1, timestamp, blob, b64 });
+          await ffmpeg.deleteFile(outName);
+        } catch {}
+      }
+
+      return frames;
+    } finally {
+      await ffmpeg.deleteFile(inputName).catch(() => {});
+      await cleanupKeyframes(ffmpeg, pfx, count);
+    }
+  });
+}
+
+function getKeyframeName(pfx: string, index: number): string {
+  return `${pfx}kf_${index}.png`;
+}
+
+async function cleanupKeyframes(ffmpeg: FFmpegAPI, pfx: string, count: number): Promise<void> {
+  for (let i = 1; i <= count; i++) {
+    await ffmpeg.deleteFile(getKeyframeName(pfx, i)).catch(() => {});
+  }
 }
 
 function getExtension(filename: string): string {

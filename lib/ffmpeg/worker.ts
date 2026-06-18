@@ -1,4 +1,4 @@
-interface FFmpegAPI {
+export interface FFmpegAPI {
   writeFile(path: string, data: Uint8Array): Promise<void>;
   readFile(path: string): Promise<Uint8Array>;
   deleteFile(path: string): Promise<void>;
@@ -7,6 +7,7 @@ interface FFmpegAPI {
 
 let api: FFmpegAPI | null = null;
 let loadPromise: Promise<FFmpegAPI> | null = null;
+let transactionQueue: Promise<void> = Promise.resolve();
 
 export function checkCrossOriginIsolated(): boolean {
   return typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
@@ -47,6 +48,23 @@ export async function getFFmpeg(): Promise<FFmpegAPI> {
   })();
 
   return loadPromise;
+}
+
+export async function runWithFFmpeg<T>(task: (ffmpeg: FFmpegAPI) => Promise<T>): Promise<T> {
+  const previous = transactionQueue;
+  let release!: () => void;
+  transactionQueue = new Promise<void>(resolve => {
+    release = resolve;
+  });
+
+  await previous;
+
+  try {
+    const ffmpeg = await getFFmpeg();
+    return await task(ffmpeg);
+  } finally {
+    release();
+  }
 }
 
 async function fetchAsBlobURL(url: string, mime: string): Promise<string> {
