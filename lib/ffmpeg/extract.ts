@@ -22,7 +22,9 @@ export async function extractFrames(file: File, fps: number, jobId = ''): Promis
     const name = `${pfx}frame_${String(i).padStart(4, '0')}.png`;
     try {
       const data = await ffmpeg.readFile(name) as Uint8Array;
-      const blob = new Blob([(data.buffer as ArrayBuffer).slice(data.byteOffset, data.byteOffset + data.byteLength)], { type: 'image/png' });
+      const buf = new ArrayBuffer(data.byteLength);
+      new Uint8Array(buf).set(data);
+      const blob = new Blob([buf], { type: 'image/png' });
       const b64 = await blobToBase64(blob);
       frames.push({ index: i - 1, timestamp: (i - 1) / fps, blob, b64 });
       await ffmpeg.deleteFile(name);

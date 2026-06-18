@@ -26,7 +26,9 @@ export async function extractKeyframes(file: File, count = 5, jobId = ''): Promi
 
     try {
       const data = await ffmpeg.readFile(outName) as Uint8Array;
-      const blob = new Blob([(data.buffer as ArrayBuffer).slice(data.byteOffset, data.byteOffset + data.byteLength)], { type: 'image/png' });
+      const buf = new ArrayBuffer(data.byteLength);
+      new Uint8Array(buf).set(data);
+      const blob = new Blob([buf], { type: 'image/png' });
       const b64 = await blobToBase64(blob);
       frames.push({ index: i - 1, timestamp, blob, b64 });
       await ffmpeg.deleteFile(outName);
