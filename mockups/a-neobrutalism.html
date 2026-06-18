@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ima2-worldcup — Neobrutalism</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#fffbe6;color:#111;min-height:100vh}
+.tag{position:fixed;top:12px;right:12px;background:#111;color:#fffbe6;padding:4px 12px;font-size:11px;font-weight:800;letter-spacing:1px;z-index:99}
+.app{max-width:960px;margin:0 auto;padding:20px}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding:14px 18px;background:#ff6b6b;border:3px solid #111;box-shadow:6px 6px 0 #111}
+.logo{font-size:26px;font-weight:900;color:#111;letter-spacing:-1px}
+.logo span{background:#111;color:#ff6b6b;padding:0 6px}
+.tagline{font-size:11px;font-weight:700;color:#111;opacity:0.7}
+.header-right{margin-left:auto;display:flex;gap:8px}
+.btn{padding:8px 16px;border:3px solid #111;background:#fffbe6;font-weight:800;font-size:12px;cursor:pointer;box-shadow:3px 3px 0 #111;transition:all 0.1s}
+.btn:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 #111}
+.btn.primary{background:#111;color:#fffbe6}
+.main{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.panel{border:3px solid #111;box-shadow:6px 6px 0 #111}
+.panel-head{padding:10px 16px;background:#111;color:#fffbe6;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.panel-body{padding:16px}
+.upload{border:3px dashed #111;padding:40px 16px;text-align:center;cursor:pointer;background:#fff;transition:background 0.15s}
+.upload:hover{background:#ffeaa7}
+.upload-icon{font-size:40px;margin-bottom:8px}
+.upload-text{font-size:14px;font-weight:800}
+.upload-sub{font-size:10px;color:#666;margin-top:4px;font-weight:600}
+.section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px;color:#111}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mode{padding:10px;border:3px solid #111;text-align:center;cursor:pointer;font-weight:800;font-size:11px;background:#fff;transition:all 0.1s}
+.mode:hover{background:#ffeaa7}
+.mode.on{background:#a29bfe;color:#111;box-shadow:3px 3px 0 #111}
+.mode-emoji{font-size:20px;display:block;margin-bottom:2px}
+.style-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 14px;border:3px solid #111;font-weight:800;font-size:11px;cursor:pointer;background:#fff}
+.chip:hover{background:#ffeaa7}
+.chip.on{background:#fd79a8;color:#111;box-shadow:2px 2px 0 #111}
+.fps{display:flex;align-items:center;gap:10px;padding:10px;border:3px solid #111;background:#fff;margin-top:12px}
+.fps label{font-size:11px;font-weight:800}
+.fps input[type=range]{flex:1;accent-color:#111}
+.fps .val{font-weight:900;font-size:14px;min-width:36px;text-align:right}
+.gen-btn{width:100%;padding:14px;border:3px solid #111;background:#6c5ce7;color:#fff;font-size:16px;font-weight:900;cursor:pointer;box-shadow:6px 6px 0 #111;margin-top:16px;text-transform:uppercase;letter-spacing:2px;transition:all 0.1s}
+.gen-btn:hover{transform:translate(2px,2px);box-shadow:4px 4px 0 #111}
+.preview{min-height:340px;display:flex;align-items:center;justify-content:center;background:#fff;border:3px dashed #ccc;margin:0}
+.preview-text{text-align:center;font-weight:800;color:#ccc;font-size:14px}
+.preview canvas{width:100%;height:260px;border:3px solid #111}
+.result-bar{display:flex;gap:6px;margin-top:10px}
+.result-bar .btn{flex:1;font-size:11px;padding:8px}
+.progress{margin-top:10px}
+.pbar{height:8px;background:#eee;border:2px solid #111}
+.pfill{height:100%;width:65%;background:repeating-linear-gradient(45deg,#6c5ce7,#6c5ce7 10px,#a29bfe 10px,#a29bfe 20px)}
+.ptxt{font-size:10px;font-weight:800;margin-top:4px;text-align:center}
+</style>
+</head>
+<body>
+<div class="tag">A · NEOBRUTALISM</div>
+<div class="app">
+  <div class="header">
+    <div>
+      <div class="logo">ima2-<span>worldcup</span></div>
+      <div class="tagline">AI Style Transfer for Sports Highlights</div>
+    </div>
+    <div class="header-right">
+      <button class="btn">GitHub</button>
+      <button class="btn primary">Sign In</button>
+    </div>
+  </div>
+  <div class="main">
+    <div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">Upload</div>
+        <div class="panel-body">
+          <div class="upload" onclick="this.innerHTML='<div class=upload-icon>⚽</div><div class=upload-text>world_cup_goal.mp4</div><div class=upload-sub>12.4 MB · 0:10 · 1080p</div>'">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Drop video or image</div>
+            <div class="upload-sub">MP4 · GIF · PNG · JPG — max 100MB</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">Settings</div>
+        <div class="panel-body">
+          <div class="section-label">Mode</div>
+          <div class="mode-grid">
+            <div class="mode on" onclick="document.querySelectorAll('.mode').forEach(m=>m.classList.remove('on'));this.classList.add('on')"><span class="mode-emoji">🖼️</span>Image</div>
+            <div class="mode" onclick="document.querySelectorAll('.mode').forEach(m=>m.classList.remove('on'));this.classList.add('on')"><span class="mode-emoji">🎞️</span>Frames→GIF</div>
+            <div class="mode" onclick="document.querySelectorAll('.mode').forEach(m=>m.classList.remove('on'));this.classList.add('on')"><span class="mode-emoji">📸</span>Video→1pic</div>
+            <div class="mode" onclick="document.querySelectorAll('.mode').forEach(m=>m.classList.remove('on'));this.classList.add('on')"><span class="mode-emoji">🎬</span>Grok V2V</div>
+          </div>
+          <div class="section-label">Style</div>
+          <div class="style-row">
+            <div class="chip on" onclick="document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on')">Crayon</div>
+            <div class="chip" onclick="document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on')">Watercolor</div>
+            <div class="chip" onclick="document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on')">Oil</div>
+            <div class="chip" onclick="document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on')">Sketch</div>
+            <div class="chip" onclick="document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on')">Anime</div>
+            <div class="chip" onclick="document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on')">Custom</div>
+          </div>
+          <div class="fps">
+            <label>FPS</label>
+            <input type="range" min="1" max="9" value="3" oninput="this.nextElementSibling.textContent=['⅓','½','1','1.5','2','2.5','3','4','5'][this.value-1]+'/s'">
+            <span class="val">1/s</span>
+          </div>
+          <button class="gen-btn" onclick="showResult()">Generate</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Preview</div>
+      <div class="panel-body">
+        <div class="preview" id="prev">
+          <div class="preview-text">Upload & Generate<br>to see result</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function showResult(){
+  const p=document.getElementById('prev');
+  p.innerHTML='<div style="width:100%"><canvas id="c" style="width:100%;height:260px;border:3px solid #111"></canvas><div class="progress"><div class="pbar"><div class="pfill"></div></div><div class="ptxt">Frame 7/10 — crayon style...</div></div><div class="result-bar"><button class="btn">Retry</button><button class="btn">Share</button><button class="btn primary">Download</button></div></div>';
+  drawArt(document.getElementById('c'));
+}
+function drawArt(c){
+  const x=c.getContext('2d');c.width=440;c.height=220;
+  x.fillStyle='#2563eb';x.fillRect(0,0,440,80);
+  for(let i=0;i<80;i++){x.fillStyle=['#ef4444','#3b82f6','#fbbf24','#22c55e','#f472b6'][~~(Math.random()*5)];x.beginPath();x.arc(Math.random()*440,Math.random()*50+10,2+Math.random()*3,0,Math.PI*2);x.fill()}
+  x.fillStyle='#1e293b';x.fillRect(0,60,440,22);
+  for(let y=82;y<220;y+=2)for(let i=0;i<440;i+=3){x.fillStyle=`rgb(${30+Math.random()*20},${120+Math.random()*40},${20+Math.random()*15})`;x.fillRect(i,y,3,2)}
+  x.strokeStyle='rgba(255,255,255,0.4)';x.lineWidth=1.5;x.beginPath();x.moveTo(0,140);x.lineTo(440,140);x.stroke();
+  [{x:80,y:130,c:'#fff'},{x:200,y:150,c:'#fff'},{x:350,y:120,c:'#fff'},{x:120,y:170,c:'#22c55e'},{x:280,y:140,c:'#22c55e'},{x:220,y:155,c:'#fbbf24'}].forEach(p=>{x.fillStyle=p.c;x.beginPath();x.arc(p.x,p.y,p.c==='#fbbf24'?4:6,0,Math.PI*2);x.fill()})
+}
+</script>
+</body>
+</html>
