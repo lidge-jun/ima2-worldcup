@@ -310,7 +310,7 @@ export default function Home() {
   const currentPreviewState: PreviewState = !hasToken ? 'auth-required' : previewState;
 
   return (
-    <div className="h-screen grid grid-cols-[200px_1fr_220px]">
+    <div className="h-[100dvh] grid grid-cols-[200px_1fr_220px]">
       {/* Left: Gallery */}
       <Gallery onSelect={setSelectedGallery} selectedId={selectedGallery?.id} />
 
