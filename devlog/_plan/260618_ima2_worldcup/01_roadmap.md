@@ -1,54 +1,88 @@
-# ima2-worldcup — Roadmap
+# ima2-worldcup — Roadmap (revised 260618)
 
-## Phase 1: Foundation (PABCD #1)
+## Phase 1: Foundation (PABCD #1) ✅ DONE
 **Goal**: Next.js scaffold + OAuth + single image-to-image
 
-- Next.js App Router + Tailwind CSS setup
-- Vercel deployment config
-- Codex OAuth flow (user logs in with own ChatGPT account)
-- xAI OAuth flow (user logs in with own Grok account)
+- Next.js App Router + Tailwind CSS + Pretendard + Lucide
+- Neobrutalism 2-color design system (red + black)
+- Codex OAuth token paste
 - Single image upload → GPT 5.4 mini i2i → styled image download
-- Style preset picker (crayon, watercolor, oil, sketch, anime, custom)
-- **Done when**: Upload 1 image → get 1 styled image back, deployed on Vercel
+- 6 style presets (crayon, watercolor, oil, sketch, anime, custom)
+- **Done**: tsc clean, next build pass, dev server verified
 
 ## Phase 2: Video Pipeline (PABCD #2)
 **Goal**: ffmpeg.wasm + frame extraction + parallel batch + GIF assembly
 
-- ffmpeg.wasm integration (client-side, browser WASM)
-- Video upload + frame extraction at configurable FPS (0.33–3 fps)
-- Parallel image generation (batch N frames simultaneously, like ima2-gen)
-- Progress UI (frame X/N, estimated time)
-- GIF/MP4 reassembly from styled frames
-- **Done when**: 10-sec MP4 → crayon GIF in ~3 minutes via parallel generation
+- ffmpeg.wasm 브라우저 통합 (COOP/COEP 헤더 준비됨)
+- 비디오 업로드 + FPS 설정 + 프레임 추출
+- N개 프레임 완전 병렬 i2i (1장 ≈ N장 시간)
+- FrameStrip + ProgressBar + ETA
+- GIF 조립 + 다운로드
+- **Test**: `test-assets/arg-alg-clip.mov` (71MB, ARG vs ALG)
+- Sub-plans: 121 (ffmpeg.wasm), 122 (parallel batch)
 
 ## Phase 3: Advanced Modes (PABCD #3)
-**Goal**: Video → single image + Grok V2V
+**Goal**: Video → single image + Grok V2V, 4개 모드 전부 활성
 
-- Video → keyframe extraction → single styled image
-- Grok V2V integration (video-to-video via xAI API)
-- Mode switching UI (4 modes fully functional)
-- **Done when**: All 4 modes work end-to-end
+- 키프레임 피커 (5장 썸네일 선택)
+- Grok V2V (xAI API)
+- 모드 잠금 전부 해제
+- **Test**: `test-assets/arg-alg-clip.mov` + `arg-alg-frame.png`
+- Sub-plans: 131 (keyframe), 132 (grok v2v)
 
-## Phase 4: Polish & Launch (PABCD #4)
-**Goal**: Production quality + open-source release
+## Phase 4: Polish + Local Verification (PABCD #4)
+**Goal**: 프로덕션 품질 + `ima2w serve` 로컬 CLI + 최종 검증
 
-- Landing page / marketing site
-- README + docs + GitHub repo setup
-- Custom domain deployment (e.g., ima2-worldcup.lidge.dev)
-- Open-source release (MIT license)
-- Share/social features (direct Chzzk/Twitter share?)
-- Performance optimization (WASM loading, generation queue)
-- **Done when**: Public site live, GitHub repo public, README complete
+- 랜딩 페이지 (Before/After 실제 변환 결과)
+- 반응형 모바일 레이아웃
+- Share (클립보드 + X 링크) + History (localStorage)
+- README.md + 스크린샷 + 사용 가이드
+- `ima2w serve` CLI: dist/bin symlink → `npm run dev` 래퍼
+- `ima2w setup` interactive token 설정
+- 로컬 End-to-End 검증 (전 모드 테스트)
+- **Done**: `ima2w serve` → 브라우저에서 4 모드 전부 작동
+- Sub-plans: 141 (landing), 142 (polish), 143 (cli/ima2w)
+
+## Phase 5: CI/CD + Publish (PABCD #5)
+**Goal**: Vercel 배포 + npm publish + CI 파이프라인
+
+- Vercel 커스텀 도메인 설정 (ima2-worldcup.lidge.dev)
+- npm publish (ima2-worldcup 패키지)
+- Next.js standalone output for npm dist
+- GitHub Actions CI (tsc + build + lint)
+- OG image + SEO meta
+- **Done**: 도메인 접근 가능, `npm i -g ima2-worldcup` 설치 가능, CI green
 
 ---
+
+## GitHub
+https://github.com/lidge-jun/ima2-worldcup (public)
+
+## Test Assets
+`test-assets/arg-alg-frame.png` (3.6MB) + `arg-alg-clip.mov` (71MB)
+2026 FIFA World Cup — 아르헨티나 vs 알제리
 
 ## Technical Decisions
 
 | Decision | Choice | Reason |
 |----------|--------|--------|
-| Stack | Next.js + Vercel | SSR + API Routes, free tier, easy deploy |
-| Video processing | Browser WASM ffmpeg | No server cost, user's resources |
-| Image model | gpt-5.4-mini (non-thinking) | Fast, cheap, good enough for style transfer |
-| Auth | User's own Codex + xAI OAuth | No server keys, no cost to operator |
-| Parallel gen | Batch frames simultaneously | ~3 min for 10-sec clip (not serial) |
-| Output | GIF primary, MP4 secondary | GIF is the Chzzk/Twitter sharing format |
+| Stack | Next.js + Vercel | SSR + API Routes, free tier |
+| Video processing | Browser WASM ffmpeg | No server cost |
+| Image model | gpt-5.4-mini (non-thinking) | Fast, parallel i2i |
+| Auth | User's own Codex + xAI OAuth | No server keys |
+| Parallel gen | N frames fully concurrent | 1장 ≈ N장 시간 |
+| Output | GIF auto, MP4 on-demand | GIF = sharing format |
+| Design | Neobrutalism, 2-color (red+black) | Anti-slop, indie vibe |
+| Font | Pretendard + Inter | CJK-safe |
+| Icons | Lucide React | No emoji |
+
+## Devlog Numbering
+```
+00-09   Research/decisions
+100     Phase 0 (design)
+110-119 Phase 1 (foundation)
+120-129 Phase 2 (video)
+130-139 Phase 3 (advanced)
+140-149 Phase 4 (polish + local)
+150-159 Phase 5 (ci/cd + publish)
+```
