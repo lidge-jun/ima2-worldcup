@@ -43,6 +43,7 @@ export default function Home() {
   // Queue state
   const [jobs, setJobs] = useState<Job[]>([]);
   const processingIdsRef = useRef<Set<string>>(new Set());
+  const cancelledJobIdsRef = useRef<Set<string>>(new Set());
   const activeJobIdRef = useRef<string>('');
 
   // Current active job display
@@ -133,25 +134,31 @@ export default function Home() {
       setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'generating' as const } : j));
 
       processJob(next).then(async (result) => {
+        const isCancelled = () => cancelledJobIdsRef.current.has(next.id);
+        if (isCancelled()) return;
         setJobs(prev => prev.map(j => j.id === next.id ? { ...j, ...result, status: 'done' as const, completedAt: Date.now() } : j));
         try {
           if (result.resultB64 || result.videoBlob) {
             const b64ForThumb = result.resultB64 || '';
             const thumb = b64ForThumb ? await makeThumbnail(b64ForThumb) : '';
+            if (isCancelled()) return;
             const originalB64 = next.file.type.startsWith('image/')
               ? await fileToB64(next.file) : '';
+            if (isCancelled()) return;
             await saveToGallery({
               id: next.id, timestamp: Date.now(), fileName: next.fileName,
               style: next.style, mode: next.mode, originalB64,
               resultB64: result.resultB64, thumbB64: thumb,
               videoBlob: result.videoBlob,
             });
+            if (isCancelled()) return;
             window.dispatchEvent(new Event('gallery-updated'));
           }
         } catch (saveErr) {
           console.warn('[gallery] save failed:', saveErr);
         }
       }).catch(err => {
+        if (cancelledJobIdsRef.current.has(next.id)) return;
         const msg = err instanceof Error ? err.message
           : typeof err === 'string' ? err
           : typeof err?.message === 'string' ? err.message
@@ -163,11 +170,13 @@ export default function Home() {
         }
       }).finally(() => {
         processingIdsRef.current.delete(next.id);
+        cancelledJobIdsRef.current.delete(next.id);
       });
     }
   }, [jobs, codexToken, grokToken]);
 
-  const isActiveJob = (id: string) => activeJobIdRef.current === id;
+  const isActiveJob = (id: string) =>
+    activeJobIdRef.current === id && !cancelledJobIdsRef.current.has(id);
 
   async function processJob(job: Job): Promise<Partial<Job>> {
     if (isActiveJob(job.id)) {
@@ -265,6 +274,7 @@ export default function Home() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        window.setTimeout(() => URL.revokeObjectURL(url), 0);
       } catch (e) {
         console.error('[download] video fetch failed:', e);
       }
@@ -281,10 +291,19 @@ export default function Home() {
   };
 
   const cancelJob = (id: string) => {
+    if (processingIdsRef.current.has(id)) cancelledJobIdsRef.current.add(id);
+    if (activeJobIdRef.current === id) {
+      activeJobIdRef.current = '';
+      setPreviewState('idle');
+      setStyledFrames([]);
+      setProgress(undefined);
+      setError('');
+    }
     setJobs(prev => prev.filter(j => j.id !== id));
   };
 
   const handleGallerySelect = (item: GalleryItem) => {
+    activeJobIdRef.current = '';
     setSelectedGallery(item);
     setStyledFrames([]); setProgress(undefined); setError('');
     if (item.videoBlob) {
