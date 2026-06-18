@@ -18,17 +18,24 @@ app/                  Next.js App Router pages
   page.tsx            Main upload + generate UI
   api/                API routes (OAuth token relay)
   layout.tsx          Root layout
-components/           React components
-  upload/             Upload zone, drag-and-drop
-  settings/           Mode selector, style picker, FPS slider
-  preview/            Result preview, download actions
-  auth/               OAuth login flows
+components/           React components (flat, Phase 1)
+  Header.tsx          Logo + auth slot
+  Panel.tsx           Neobrutalism panel wrapper
+  UploadZone.tsx      Drag-and-drop upload
+  ModeSelector.tsx    4-mode grid
+  StylePicker.tsx     6-style chips
+  FpsSlider.tsx       FPS range input
+  AuthModal.tsx       Token paste modal
+  AuthStatus.tsx      Auth badge
+  PreviewPanel.tsx    Result display (5 states)
+  GenerateButton.tsx  Generate CTA
+  DownloadBar.tsx     Download/Retry/Share
 lib/
-  ffmpeg/             WASM ffmpeg wrapper (frame extraction, GIF assembly)
-  generate/           GPT image-to-image pipeline (parallel batch)
-  grok/               Grok V2V adapter
-  styles/             Style preset prompts
-  oauth/              Codex OAuth + xAI OAuth flows
+  auth.ts             Token localStorage CRUD
+  styles.ts           Style preset prompts
+  generate.ts         OpenAI Responses API wrapper
+  ffmpeg/             (Phase 2) WASM ffmpeg
+  grok/               (Phase 3) Grok V2V adapter
 devlog/
   _plan/              Active plans + roadmap
   _fin/               Completed work

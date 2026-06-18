@@ -2,9 +2,12 @@
 
 ## Files: NEW
 ```
-lib/auth.ts                 — Token storage (localStorage), validation, clear
+lib/auth.ts                 — Token storage (localStorage), clear
                               interface AuthState { codexToken?: string; grokToken?: string; }
-                              saveCodexToken(token) / getcodexToken() / clearTokens()
+                              saveCodexToken(token) / getCodexToken() / clearTokens()
+
+app/api/validate-token/route.ts — POST { token } → OpenAI GET /v1/models → { valid: boolean }
+                              서버 사이드 검증 (CORS 회피, M2 fix)
 
 components/AuthModal.tsx    — Modal: "Paste your Codex OAuth token"
                               Input field + "How to get token" 링크
@@ -26,7 +29,7 @@ app/page.tsx                — MODIFY: AuthStatus를 Header에 삽입
 2. AuthModal opens — "Paste Codex Token" tab
 3. User pastes token from Codex CLI: `codex auth token`
 4. Token saved to localStorage (key: ima2wc_codex_token)
-5. Token validated: HEAD request to OpenAI /v1/models
+5. Token validated: POST /api/validate-token → server-side GET OpenAI /v1/models (CORS-safe)
 6. Success → badge shows "codex ✓", modal closes
 ```
 
