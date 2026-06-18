@@ -10,17 +10,22 @@ const STATUS_CLASS: Record<string, string> = {
   error: 'text-[var(--accent)]',
 };
 
-export default function QueuePanel({ jobs, onCancel }: {
+export default function QueuePanel({ jobs, onCancel, overlay, onClose }: {
   jobs: Job[];
   onCancel: (id: string) => void;
+  overlay?: boolean;
+  onClose?: () => void;
 }) {
   const active = jobs.filter(j => j.status === 'generating');
   const pending = jobs.filter(j => j.status === 'queued');
   const completed = jobs.filter(j => j.status === 'done' || j.status === 'error').slice(0, 10);
 
-  return (
-    <aside className="border-l-3 border-[var(--border)] bg-[var(--surface)] flex flex-col h-full">
-      <div className="neo-panel-head text-[11px]">Queue ({jobs.length})</div>
+  const content = (
+    <>
+      <div className="neo-panel-head text-[11px] flex justify-between">
+        <span>Queue ({jobs.length})</span>
+        {overlay && <button onClick={onClose} className="text-[var(--accent)] font-black">✕</button>}
+      </div>
       <div className="flex-1 overflow-y-auto">
         {jobs.length === 0 ? (
           <div className="text-center text-[11px] font-semibold text-gray-400 py-8">
@@ -39,6 +44,22 @@ export default function QueuePanel({ jobs, onCancel }: {
           </>
         )}
       </div>
+    </>
+  );
+
+  if (overlay) {
+    return (
+      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose}>
+        <aside className="absolute right-0 top-0 bottom-0 w-[260px] border-l-3 border-[var(--border)] bg-[var(--surface)] flex flex-col shadow-xl" onClick={e => e.stopPropagation()}>
+          {content}
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <aside className="border-l-3 border-[var(--border)] bg-[var(--surface)] flex flex-col h-full">
+      {content}
     </aside>
   );
 }

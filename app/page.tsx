@@ -16,6 +16,7 @@ import Gallery from '@/components/Gallery';
 import GalleryPreview from '@/components/GalleryPreview';
 import QueuePanel from '@/components/QueuePanel';
 import AuthModal from '@/components/AuthModal';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { getCodexToken, saveCodexToken, getGrokToken, saveGrokToken } from '@/lib/auth';
 import { createJob, getActiveJob, getNextQueued, type Job } from '@/lib/store/queue';
 import { saveToGallery, makeThumbnail, type GalleryItem } from '@/lib/store/gallery';
@@ -37,6 +38,9 @@ export default function Home() {
   const [videoDuration, setVideoDuration] = useState(0);
   const [fileType, setFileType] = useState<'image' | 'video' | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const isMobile = useIsMobile();
+  const [showGallery, setShowGallery] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
 
   // Queue state
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -310,18 +314,22 @@ export default function Home() {
   const currentPreviewState: PreviewState = !hasToken ? 'auth-required' : previewState;
 
   return (
-    <div className="h-[100dvh] grid grid-cols-[200px_1fr_220px]">
-      {/* Left: Gallery */}
-      <Gallery onSelect={setSelectedGallery} selectedId={selectedGallery?.id} />
+    <div className={`h-[100dvh] grid ${isMobile ? 'grid-cols-[1fr]' : 'grid-cols-[200px_1fr_220px]'}`}>
+      {!isMobile && <Gallery onSelect={setSelectedGallery} selectedId={selectedGallery?.id} />}
 
-      {/* Center: Main */}
       <main className="flex flex-col overflow-hidden">
         <Header>
+          {isMobile && (
+            <div className="flex gap-1 mr-2">
+              <button onClick={() => setShowGallery(true)} className="neo-btn text-[10px] font-extrabold px-2 py-1">Gallery</button>
+              <button onClick={() => setShowQueue(true)} className="neo-btn text-[10px] font-extrabold px-2 py-1">Queue</button>
+            </div>
+          )}
           <AuthStatus codexToken={codexToken} grokToken={grokToken} onToken={handleToken} />
         </Header>
 
         <div className="flex-1 overflow-y-auto px-4 py-3">
-          <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
             <Panel title="Upload">
               <UploadZone file={file} onFile={setFile} onFileType={handleFileType} onDuration={setVideoDuration} />
             </Panel>
@@ -407,9 +415,10 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Right: Queue */}
-      <QueuePanel jobs={jobs} onCancel={cancelJob} />
+      {!isMobile && <QueuePanel jobs={jobs} onCancel={cancelJob} />}
 
+      {isMobile && showGallery && <Gallery onSelect={(item) => { setSelectedGallery(item); setShowGallery(false); }} selectedId={selectedGallery?.id} overlay onClose={() => setShowGallery(false)} />}
+      {isMobile && showQueue && <QueuePanel jobs={jobs} onCancel={cancelJob} overlay onClose={() => setShowQueue(false)} />}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onSave={handleToken} />}
       {selectedGallery && <GalleryPreview item={selectedGallery} onClose={() => setSelectedGallery(null)} onRegenerate={handleGalleryRegenerate} onRestyle={handleGalleryRestyle} />}
     </div>
