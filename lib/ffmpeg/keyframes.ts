@@ -4,7 +4,7 @@ import type { Frame } from './types';
 export async function extractKeyframes(file: File, count = 5, jobId = ''): Promise<Frame[]> {
   const pfx = jobId ? `${jobId}_` : '';
   const duration = await getVideoDuration(file);
-  const interval = duration / (count + 1);
+  const timestamps = getKeyframeTimestamps(duration, count);
 
   return runWithFFmpeg(async (ffmpeg) => {
     const inputName = `${pfx}kf_input${getExtension(file.name)}`;
@@ -13,10 +13,10 @@ export async function extractKeyframes(file: File, count = 5, jobId = ''): Promi
     try {
       await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
 
-      for (let i = 1; i <= count; i++) {
-        const timestamp = interval * i;
-        const outName = getKeyframeName(pfx, i);
-        await ffmpeg.exec([
+      for (let i = 0; i < timestamps.length; i++) {
+        const timestamp = timestamps[i];
+        const outName = getKeyframeName(pfx, i + 1);
+        const exitCode = await ffmpeg.exec([
           '-ss', String(timestamp),
           '-i', inputName,
           '-frames:v', '1',
@@ -24,16 +24,26 @@ export async function extractKeyframes(file: File, count = 5, jobId = ''): Promi
           '-f', 'image2',
           outName,
         ]);
+        if (exitCode !== 0) {
+          console.warn(`[keyframes] ffmpeg skipped timestamp ${timestamp.toFixed(3)}s with exit code ${exitCode}`);
+          continue;
+        }
 
         try {
           const data = await ffmpeg.readFile(outName) as Uint8Array;
+          if (data.byteLength === 0) {
+            console.warn(`[keyframes] empty frame at ${timestamp.toFixed(3)}s`);
+            continue;
+          }
           const buf = new ArrayBuffer(data.byteLength);
           new Uint8Array(buf).set(data);
           const blob = new Blob([buf], { type: 'image/png' });
           const b64 = await blobToBase64(blob);
-          frames.push({ index: i - 1, timestamp, blob, b64 });
+          frames.push({ index: frames.length, timestamp, blob, b64 });
           await ffmpeg.deleteFile(outName);
-        } catch {}
+        } catch (error) {
+          console.warn(`[keyframes] missing frame at ${timestamp.toFixed(3)}s`, error);
+        }
       }
 
       return frames;
@@ -41,6 +51,17 @@ export async function extractKeyframes(file: File, count = 5, jobId = ''): Promi
       await ffmpeg.deleteFile(inputName).catch(() => {});
       await cleanupKeyframes(ffmpeg, pfx, count);
     }
+  });
+}
+
+function getKeyframeTimestamps(duration: number, count: number): number[] {
+  const frameCount = Math.max(1, Math.floor(count));
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 1;
+  if (safeDuration <= 1.5) return [0];
+  const maxTimestamp = Math.max(0, safeDuration - 0.001);
+  if (frameCount === 1 || maxTimestamp === 0) return [0];
+  return Array.from({ length: frameCount }, (_, index) => {
+    return Math.min(maxTimestamp, (maxTimestamp * index) / (frameCount - 1));
   });
 }
 

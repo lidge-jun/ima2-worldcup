@@ -7,17 +7,20 @@ export async function assembleVideo(styledBlobs: Blob[], fps: number, jobId = ''
 
     try {
       await writeFrames(ffmpeg, styledBlobs, pfx);
-      await ffmpeg.exec([
+      const exitCode = await ffmpeg.exec([
         '-f', 'image2',
         '-framerate', String(fps),
         '-i', `${pfx}styled_%04d.png`,
+        '-vf', 'pad=ceil(iw/2)*2:ceil(ih/2)*2',
         '-c:v', 'libx264',
         '-pix_fmt', 'yuv420p',
         '-movflags', '+faststart',
         outName,
       ]);
+      if (exitCode !== 0) throw new Error(`FFmpeg MP4 assembly failed with exit code ${exitCode}`);
 
       const data = await ffmpeg.readFile(outName) as Uint8Array;
+      if (data.byteLength === 0) throw new Error('FFmpeg produced an empty MP4');
       const copy = new ArrayBuffer(data.byteLength);
       new Uint8Array(copy).set(data);
       return new Blob([copy], { type: 'video/mp4' });
