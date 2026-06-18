@@ -246,8 +246,27 @@ export default function Home() {
   };
 
   const handleGalleryRegenerate = (item: GalleryItem) => {
+    if (!item.originalB64) return;
     setSelectedGallery(null);
+    const blob = b64ToBlob(item.originalB64);
+    const restoredFile = new File([blob], item.fileName, { type: 'image/png' });
+    setFile(restoredFile);
+    setMode('image');
     setStyle(item.style);
+    const job = createJob(restoredFile, 'image', item.style, '', 1);
+    setJobs(prev => [...prev, job]);
+  };
+
+  const handleGalleryRestyle = (item: GalleryItem, newStyle: string) => {
+    if (!item.originalB64) return;
+    setSelectedGallery(null);
+    const blob = b64ToBlob(item.originalB64);
+    const restoredFile = new File([blob], item.fileName, { type: 'image/png' });
+    setFile(restoredFile);
+    setMode('image');
+    setStyle(newStyle);
+    const job = createJob(restoredFile, 'image', newStyle, '', 1);
+    setJobs(prev => [...prev, job]);
   };
 
   const canGenerate = hasToken && !!file;
@@ -315,7 +334,7 @@ export default function Home() {
             </div>
             <div className="p-3">
               {selectedGallery ? (
-                <GalleryPreview item={selectedGallery} onClose={() => setSelectedGallery(null)} onRegenerate={handleGalleryRegenerate} />
+                <GalleryPreview item={selectedGallery} onClose={() => setSelectedGallery(null)} onRegenerate={handleGalleryRegenerate} onRestyle={handleGalleryRestyle} />
               ) : previewState === 'generating' ? (
                 <div>
                   <GeneratingAnim label={progress ? `Frame ${progress.current}/${progress.total}` : 'Applying style...'} />
@@ -368,4 +387,11 @@ function fileToB64(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+function b64ToBlob(b64: string, type = 'image/png'): Blob {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type });
 }
