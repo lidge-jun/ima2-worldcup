@@ -1,11 +1,18 @@
 let ffmpeg: any = null;
 let loadPromise: Promise<any> | null = null;
 
-const CORE_URL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js';
-const WASM_URL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm';
+const CORE_BASE = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm';
+const FFMPEG_BASE = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.15/dist/esm';
 
 export function checkCrossOriginIsolated(): boolean {
   return typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
+}
+
+async function toBlobURL(url: string, mimeType: string): Promise<string> {
+  const res = await fetch(url);
+  const buf = await res.arrayBuffer();
+  const blob = new Blob([buf], { type: mimeType });
+  return URL.createObjectURL(blob);
 }
 
 export async function getFFmpeg(): Promise<any> {
@@ -17,11 +24,15 @@ export async function getFFmpeg(): Promise<any> {
       throw new Error('SharedArrayBuffer not available. COOP/COEP headers required.');
     }
 
-    console.log('[ffmpeg] loading...');
+    console.log('[ffmpeg] loading core + worker from CDN as blob URLs...');
+
+    const [coreURL, wasmURL, workerURL] = await Promise.all([
+      toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, 'text/javascript'),
+      toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm'),
+      toBlobURL(`${FFMPEG_BASE}/worker.js`, 'text/javascript'),
+    ]);
 
     const { FFmpeg } = await import('@ffmpeg/ffmpeg');
-    const { toBlobURL } = await import('@ffmpeg/util');
-
     const instance = new FFmpeg();
 
     instance.on('log', ({ message }: { message: string }) => {
@@ -29,9 +40,7 @@ export async function getFFmpeg(): Promise<any> {
     });
 
     try {
-      const coreURL = await toBlobURL(CORE_URL, 'text/javascript');
-      const wasmURL = await toBlobURL(WASM_URL, 'application/wasm');
-      await instance.load({ coreURL, wasmURL });
+      await instance.load({ coreURL, wasmURL, classWorkerURL: workerURL });
     } catch (err) {
       loadPromise = null;
       console.error('[ffmpeg] load failed:', err);
