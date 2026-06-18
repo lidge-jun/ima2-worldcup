@@ -24,7 +24,10 @@ export default function GalleryPreview({ item, onClose, onRegenerate, onRestyle 
       a.href = `data:image/png;base64,${item.resultB64}`;
       a.download = `ima2wc-${item.style}-${item.id}.png`;
     }
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   return (
