@@ -104,17 +104,30 @@ export default function Home() {
 
   const hasToken = mode === 'v2v' ? !!grokToken : !!codexToken;
 
-  // Add to queue + auto-cleanup completed jobs (keep max 5)
   const addToQueue = () => {
     if (!file || !hasToken) return;
     const job = createJob(file, mode, style, customPrompt, fps);
-    setJobs(prev => {
-      const completed = prev.filter(j => j.status === 'done' || j.status === 'error');
-      const active = prev.filter(j => j.status === 'queued' || j.status === 'generating');
-      const trimmed = completed.slice(0, 5);
-      return [...active, ...trimmed, job];
-    });
+    setJobs(prev => [...prev, job]);
   };
+
+  // Auto-remove completed jobs after 3 seconds — use ref to avoid timer reset on every jobs change
+  const removalTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  useEffect(() => {
+    const timers = removalTimers.current;
+    const completed = jobs.filter(j => (j.status === 'done' || j.status === 'error') && j.completedAt);
+    for (const j of completed) {
+      if (timers.has(j.id)) continue;
+      const elapsed = Date.now() - (j.completedAt || 0);
+      const remaining = Math.max(0, 3000 - elapsed);
+      timers.set(j.id, setTimeout(() => {
+        timers.delete(j.id);
+        setJobs(prev => prev.filter(p => p.id !== j.id));
+      }, remaining));
+    }
+    for (const [id, t] of timers) {
+      if (!jobs.some(j => j.id === id)) { clearTimeout(t); timers.delete(id); }
+    }
+  }, [jobs]);
 
   // Process queue
   useEffect(() => {
@@ -160,7 +173,7 @@ export default function Home() {
         : typeof err === 'string' ? err
         : typeof err?.message === 'string' ? err.message
         : JSON.stringify(err) || 'Unknown error';
-      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: msg } : j));
+      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: msg, completedAt: Date.now() } : j));
       setError(msg);
       setPreviewState('error');
     }).finally(() => {

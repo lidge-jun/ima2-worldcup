@@ -4,9 +4,8 @@ import type { Frame } from './types';
 export async function extractKeyframes(file: File, count = 5): Promise<Frame[]> {
   const ffmpeg = await getFFmpeg();
 
-  const { fetchFile } = await import('@ffmpeg/util');
   const inputName = 'kf_input' + getExtension(file.name);
-  await ffmpeg.writeFile(inputName, await fetchFile(file));
+  await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
 
   const duration = await getVideoDuration(file);
   const interval = duration / (count + 1);
