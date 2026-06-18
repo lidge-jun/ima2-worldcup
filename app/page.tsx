@@ -13,7 +13,6 @@ import GrokProgress from '@/components/GrokProgress';
 import PreviewPanel from '@/components/PreviewPanel';
 import GeneratingAnim from '@/components/GeneratingAnim';
 import Gallery from '@/components/Gallery';
-import GalleryPreview from '@/components/GalleryPreview';
 import QueuePanel from '@/components/QueuePanel';
 import AuthModal from '@/components/AuthModal';
 import { useIsMobile } from '@/hooks/useIsMobile';
@@ -30,7 +29,6 @@ export default function Home() {
   const [codexToken, setCodexToken] = useState('');
   const [grokToken, setGrokToken] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [fileB64, setFileB64] = useState('');
   const [mode, setMode] = useState<Mode>('image');
   const [style, setStyle] = useState('crayon');
   const [customPrompt, setCustomPrompt] = useState('');
@@ -76,14 +74,6 @@ export default function Home() {
       if (d.proxyAvailable) setCodexToken('proxy');
     }).catch(() => {});
   }, []);
-
-  // Read image as b64 for image mode
-  useEffect(() => {
-    if (!file || mode !== 'image' || !file.type.startsWith('image/')) { setFileB64(''); return; }
-    const reader = new FileReader();
-    reader.onload = () => setFileB64((reader.result as string).split(',')[1] || '');
-    reader.readAsDataURL(file);
-  }, [file, mode]);
 
   // Extract keyframes for single mode
   useEffect(() => {
@@ -289,30 +279,6 @@ export default function Home() {
     setJobs(prev => prev.filter(j => j.id !== id));
   };
 
-  const handleGalleryRegenerate = (item: GalleryItem) => {
-    if (!item.originalB64) return;
-    setSelectedGallery(null);
-    const blob = b64ToBlob(item.originalB64);
-    const restoredFile = new File([blob], item.fileName, { type: 'image/png' });
-    setFile(restoredFile);
-    setMode('image');
-    setStyle(item.style);
-    const job = createJob(restoredFile, 'image', item.style, '', 1);
-    setJobs(prev => [...prev, job]);
-  };
-
-  const handleGalleryRestyle = (item: GalleryItem, newStyle: string) => {
-    if (!item.originalB64) return;
-    setSelectedGallery(null);
-    const blob = b64ToBlob(item.originalB64);
-    const restoredFile = new File([blob], item.fileName, { type: 'image/png' });
-    setFile(restoredFile);
-    setMode('image');
-    setStyle(newStyle);
-    const job = createJob(restoredFile, 'image', newStyle, '', 1);
-    setJobs(prev => [...prev, job]);
-  };
-
   const handleGallerySelect = (item: GalleryItem) => {
     setSelectedGallery(item);
     setStyledFrames([]); setProgress(undefined); setError('');
@@ -450,11 +416,4 @@ function fileToB64(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-}
-
-function b64ToBlob(b64: string, type = 'image/png'): Blob {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type });
 }

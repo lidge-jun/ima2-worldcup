@@ -5,6 +5,8 @@ dist/
 *.mp4
 *.gif
 *.mov
+*.tgz
+.DS_Store
 output/
 test-assets/
 tsconfig.tsbuildinfo
