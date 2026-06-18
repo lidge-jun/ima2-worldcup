@@ -48,9 +48,13 @@ export default function AuthStatus({ codexToken, grokToken, onToken }: {
             <WifiOff size={12} /> Connect
           </button>
         )}
-        {grokToken && (
+        {grokToken ? (
           <button className="neo-btn flex items-center gap-1 text-[11px] py-1 px-2.5 bg-[var(--accent)] border-[var(--border)]" onClick={() => openModal('grok')}>
             <Check size={12} /> grok
+          </button>
+        ) : (
+          <button className="neo-btn flex items-center gap-1 text-[11px] py-1 px-2.5" onClick={() => openModal('grok')}>
+            <KeyRound size={12} /> Grok
           </button>
         )}
       </div>
