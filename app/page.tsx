@@ -155,8 +155,13 @@ export default function Home() {
         console.warn('[gallery] save failed:', saveErr);
       }
     }).catch(err => {
-      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: err instanceof Error ? err.message : 'Unknown error' } : j));
-      setError(err instanceof Error ? err.message : 'Generation failed');
+      console.error('[processJob] error:', err);
+      const msg = err instanceof Error ? err.message
+        : typeof err === 'string' ? err
+        : typeof err?.message === 'string' ? err.message
+        : JSON.stringify(err) || 'Unknown error';
+      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: msg } : j));
+      setError(msg);
       setPreviewState('error');
     }).finally(() => {
       processingRef.current = false;

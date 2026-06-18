@@ -19,13 +19,25 @@ export async function getFFmpeg(): Promise<FFmpeg> {
       throw new Error('SharedArrayBuffer not available. COOP/COEP headers required.');
     }
 
+    console.log('[ffmpeg] loading core from CDN...');
     const instance = new FFmpeg();
 
-    await instance.load({
-      coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
+    instance.on('log', ({ message }) => {
+      console.log('[ffmpeg]', message);
     });
 
+    try {
+      await instance.load({
+        coreURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${BASE_URL}/ffmpeg-core.wasm`, 'application/wasm'),
+      });
+    } catch (err) {
+      loadPromise = null;
+      console.error('[ffmpeg] load failed:', err);
+      throw new Error(`FFmpeg load failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    console.log('[ffmpeg] loaded successfully');
     ffmpeg = instance;
     return instance;
   })();
