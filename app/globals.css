@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+@import 'pretendard/dist/web/static/pretendard.min.css';
+
+:root {
+  --bg: #fffbe6;
+  --surface: #fff;
+  --text: #111;
+  --border: #111;
+  --shadow: #111;
+  --accent: #ff6b6b;
+  --hover: #ffeaa7;
+}
+
+body {
+  font-family: 'Pretendard', 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.neo-panel {
+  border: 3px solid var(--border);
+  box-shadow: 6px 6px 0 var(--shadow);
+  background: var(--surface);
+}
+
+.neo-panel-head {
+  padding: 10px 16px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.neo-btn {
+  padding: 8px 16px;
+  border: 3px solid var(--border);
+  background: var(--surface);
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--shadow);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.neo-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.neo-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--shadow);
+}
+
+.neo-btn-primary {
+  background: var(--text);
+  color: var(--bg);
+}
+
+.neo-btn-accent {
+  background: var(--accent);
+  color: var(--text);
+}
