@@ -1,10 +1,11 @@
 import { getFFmpeg } from './worker';
 import type { Frame } from './types';
 
-export async function extractKeyframes(file: File, count = 5): Promise<Frame[]> {
+export async function extractKeyframes(file: File, count = 5, jobId = ''): Promise<Frame[]> {
+  const pfx = jobId ? `${jobId}_` : '';
   const ffmpeg = await getFFmpeg();
 
-  const inputName = 'kf_input' + getExtension(file.name);
+  const inputName = `${pfx}kf_input${getExtension(file.name)}`;
   await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
 
   const duration = await getVideoDuration(file);
@@ -13,7 +14,7 @@ export async function extractKeyframes(file: File, count = 5): Promise<Frame[]> 
   const frames: Frame[] = [];
   for (let i = 1; i <= count; i++) {
     const timestamp = interval * i;
-    const outName = `kf_${i}.png`;
+    const outName = `${pfx}kf_${i}.png`;
     await ffmpeg.exec([
       '-ss', String(timestamp),
       '-i', inputName,
@@ -29,9 +30,7 @@ export async function extractKeyframes(file: File, count = 5): Promise<Frame[]> 
       const b64 = await blobToBase64(blob);
       frames.push({ index: i - 1, timestamp, blob, b64 });
       await ffmpeg.deleteFile(outName);
-    } catch {
-      // frame extraction failed at this timestamp, skip
-    }
+    } catch {}
   }
 
   await ffmpeg.deleteFile(inputName);

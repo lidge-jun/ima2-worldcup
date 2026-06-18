@@ -18,7 +18,7 @@ import QueuePanel from '@/components/QueuePanel';
 import AuthModal from '@/components/AuthModal';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { getCodexToken, saveCodexToken, getGrokToken, saveGrokToken } from '@/lib/auth';
-import { createJob, getActiveJob, getNextQueued, type Job } from '@/lib/store/queue';
+import { createJob, type Job } from '@/lib/store/queue';
 import { saveToGallery, makeThumbnail, type GalleryItem } from '@/lib/store/gallery';
 import type { Frame, StyledFrame } from '@/lib/ffmpeg/types';
 import type { V2VProgress } from '@/lib/grok/v2v';
@@ -44,7 +44,8 @@ export default function Home() {
 
   // Queue state
   const [jobs, setJobs] = useState<Job[]>([]);
-  const processingRef = useRef(false);
+  const processingIdsRef = useRef<Set<string>>(new Set());
+  const activeJobIdRef = useRef<string>('');
 
   // Current active job display
   const [previewState, setPreviewState] = useState<PreviewState>('idle');
@@ -133,64 +134,59 @@ export default function Home() {
     }
   }, [jobs]);
 
-  // Process queue
+  // Process queue — start all queued jobs concurrently
   useEffect(() => {
-    if (processingRef.current) return;
-    const active = getActiveJob(jobs);
-    if (active) return;
-    const next = getNextQueued(jobs);
-    if (!next) return;
+    const queued = jobs.filter(j => j.status === 'queued' && !processingIdsRef.current.has(j.id));
+    for (const next of queued) {
+      processingIdsRef.current.add(next.id);
+      activeJobIdRef.current = next.id;
+      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'generating' as const } : j));
 
-    processingRef.current = true;
-    setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'generating' as const } : j));
-
-    processJob(next).then(async (result) => {
-      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, ...result, status: 'done' as const, completedAt: Date.now() } : j));
-
-      // Save to gallery — isolated try/catch so failure doesn't poison job status
-      try {
-        if (result.resultB64 || result.gifUrl) {
-          const b64ForThumb = result.resultB64 || '';
-          const thumb = b64ForThumb ? await makeThumbnail(b64ForThumb) : '';
-          const originalB64 = next.file.type.startsWith('image/')
-            ? await fileToB64(next.file)
-            : '';
-          await saveToGallery({
-            id: next.id,
-            timestamp: Date.now(),
-            fileName: next.fileName,
-            style: next.style,
-            mode: next.mode,
-            originalB64,
-            resultB64: result.resultB64,
-            thumbB64: thumb,
-          });
-          window.dispatchEvent(new Event('gallery-updated'));
+      processJob(next).then(async (result) => {
+        setJobs(prev => prev.map(j => j.id === next.id ? { ...j, ...result, status: 'done' as const, completedAt: Date.now() } : j));
+        try {
+          if (result.resultB64 || result.gifUrl) {
+            const b64ForThumb = result.resultB64 || '';
+            const thumb = b64ForThumb ? await makeThumbnail(b64ForThumb) : '';
+            const originalB64 = next.file.type.startsWith('image/')
+              ? await fileToB64(next.file) : '';
+            await saveToGallery({
+              id: next.id, timestamp: Date.now(), fileName: next.fileName,
+              style: next.style, mode: next.mode, originalB64,
+              resultB64: result.resultB64, thumbB64: thumb,
+            });
+            window.dispatchEvent(new Event('gallery-updated'));
+          }
+        } catch (saveErr) {
+          console.warn('[gallery] save failed:', saveErr);
         }
-      } catch (saveErr) {
-        console.warn('[gallery] save failed:', saveErr);
-      }
-    }).catch(err => {
-      console.error('[processJob] error:', err);
-      const msg = err instanceof Error ? err.message
-        : typeof err === 'string' ? err
-        : typeof err?.message === 'string' ? err.message
-        : JSON.stringify(err) || 'Unknown error';
-      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: msg, completedAt: Date.now() } : j));
-      setError(msg);
-      setPreviewState('error');
-    }).finally(() => {
-      processingRef.current = false;
-    });
+      }).catch(err => {
+        const msg = err instanceof Error ? err.message
+          : typeof err === 'string' ? err
+          : typeof err?.message === 'string' ? err.message
+          : JSON.stringify(err) || 'Unknown error';
+        setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: msg, completedAt: Date.now() } : j));
+        if (activeJobIdRef.current === next.id) {
+          setError(msg);
+          setPreviewState('error');
+        }
+      }).finally(() => {
+        processingIdsRef.current.delete(next.id);
+      });
+    }
   }, [jobs, codexToken, grokToken]);
 
+  const isActiveJob = (id: string) => activeJobIdRef.current === id;
+
   async function processJob(job: Job): Promise<Partial<Job>> {
-    setPreviewState('generating');
-    setResultB64(''); setGifUrl(''); setVideoUrl('');
-    setStyledFrames([]); setProgress(undefined); setError('');
+    if (isActiveJob(job.id)) {
+      setPreviewState('generating');
+      setResultB64(''); setGifUrl(''); setVideoUrl('');
+      setStyledFrames([]); setProgress(undefined); setError('');
+    }
 
     if (job.mode === 'image') {
-      setResultKind('image');
+      if (isActiveJob(job.id)) setResultKind('image');
       const b64 = await fileToB64(job.file);
       const res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -198,24 +194,23 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed');
-      setResultB64(data.resultB64);
-      setPreviewState('done');
+      if (isActiveJob(job.id)) { setResultB64(data.resultB64); setPreviewState('done'); }
       return { resultB64: data.resultB64 };
     }
 
     if (job.mode === 'frames') {
-      setResultKind('video');
+      if (isActiveJob(job.id)) setResultKind('video');
       const { extractFrames } = await import('@/lib/ffmpeg/extract');
-      const extracted = await extractFrames(job.file, job.fps);
+      const extracted = await extractFrames(job.file, job.fps, job.id);
       const sf: StyledFrame[] = extracted.map(f => ({ ...f, status: 'pending' as const }));
-      setStyledFrames(sf);
+      if (isActiveJob(job.id)) setStyledFrames(sf);
 
       const { generateBatch } = await import('@/lib/generate-batch');
       const results = await generateBatch(extracted, job.style, job.customPrompt, codexToken, (done, total) => {
-        setProgress({ current: done, total });
+        if (isActiveJob(job.id)) setProgress({ current: done, total });
         setJobs(prev => prev.map(j => j.id === job.id ? { ...j, progress: { current: done, total } } : j));
       });
-      setStyledFrames(results);
+      if (isActiveJob(job.id)) setStyledFrames(results);
 
       const doneFrames = results.filter(f => f.status === 'done' && f.styledB64);
       if (!doneFrames.length) throw new Error('All frames failed');
@@ -228,17 +223,16 @@ export default function Home() {
       });
 
       const { assembleVideo } = await import('@/lib/ffmpeg/assemble');
-      const videoBlob = await assembleVideo(blobs, job.fps);
+      const videoBlob = await assembleVideo(blobs, job.fps, job.id);
       const url = URL.createObjectURL(videoBlob);
-      setVideoUrl(url);
-      setPreviewState('done');
+      if (isActiveJob(job.id)) { setVideoUrl(url); setPreviewState('done'); }
       return { videoUrl: url, resultB64: doneFrames[0]?.styledB64 };
     }
 
     if (job.mode === 'single') {
-      setResultKind('image');
+      if (isActiveJob(job.id)) setResultKind('image');
       const { extractKeyframes } = await import('@/lib/ffmpeg/keyframes');
-      const kfs = await extractKeyframes(job.file, 5);
+      const kfs = await extractKeyframes(job.file, 5, job.id);
       const kf = kfs[0];
       if (!kf) throw new Error('No keyframes extracted');
       const res = await fetch('/api/generate', {
@@ -247,19 +241,17 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed');
-      setResultB64(data.resultB64);
-      setPreviewState('done');
+      if (isActiveJob(job.id)) { setResultB64(data.resultB64); setPreviewState('done'); }
       return { resultB64: data.resultB64 };
     }
 
     if (job.mode === 'v2v') {
-      setResultKind('video');
+      if (isActiveJob(job.id)) setResultKind('video');
       const { grokVideoToVideo } = await import('@/lib/grok/v2v');
       const url = await grokVideoToVideo(job.file, job.style, job.customPrompt, grokToken, (stage) => {
-        setGrokStage(stage);
+        if (isActiveJob(job.id)) setGrokStage(stage);
       });
-      setVideoUrl(url);
-      setPreviewState('done');
+      if (isActiveJob(job.id)) { setVideoUrl(url); setPreviewState('done'); }
       return { videoUrl: url };
     }
 

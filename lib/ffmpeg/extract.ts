@@ -1,36 +1,30 @@
 import { getFFmpeg } from './worker';
 import type { Frame } from './types';
 
-export async function extractFrames(file: File, fps: number): Promise<Frame[]> {
-  console.log(`[extract] start: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) @ ${fps}fps`);
+export async function extractFrames(file: File, fps: number, jobId = ''): Promise<Frame[]> {
+  const pfx = jobId ? `${jobId}_` : '';
+  console.log(`[extract] start: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) @ ${fps}fps [${pfx || 'default'}]`);
   const ffmpeg = await getFFmpeg();
 
-  const inputName = 'input' + getExtension(file.name);
-  console.log('[extract] writing file to ffmpeg FS...');
+  const inputName = `${pfx}input${getExtension(file.name)}`;
   await ffmpeg.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
 
-  console.log('[extract] running ffmpeg exec...');
   const exitCode = await ffmpeg.exec([
     '-i', inputName,
     '-vf', `fps=${fps},scale='min(1024,iw)':'-1':flags=lanczos`,
     '-f', 'image2',
-    'frame_%04d.png',
+    `${pfx}frame_%04d.png`,
   ]);
   console.log('[extract] ffmpeg exit code:', exitCode);
 
   const frames: Frame[] = [];
   for (let i = 1; ; i++) {
-    const name = `frame_${String(i).padStart(4, '0')}.png`;
+    const name = `${pfx}frame_${String(i).padStart(4, '0')}.png`;
     try {
       const data = await ffmpeg.readFile(name) as Uint8Array;
       const blob = new Blob([data.buffer as ArrayBuffer], { type: 'image/png' });
       const b64 = await blobToBase64(blob);
-      frames.push({
-        index: i - 1,
-        timestamp: (i - 1) / fps,
-        blob,
-        b64,
-      });
+      frames.push({ index: i - 1, timestamp: (i - 1) / fps, blob, b64 });
       await ffmpeg.deleteFile(name);
     } catch {
       break;
