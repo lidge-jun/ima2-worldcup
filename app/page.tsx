@@ -35,6 +35,7 @@ export default function Home() {
   const [customPrompt, setCustomPrompt] = useState('');
   const [fps, setFps] = useState(1);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [fileType, setFileType] = useState<'image' | 'video' | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Queue state
@@ -95,13 +96,24 @@ export default function Home() {
     else { saveGrokToken(token); setGrokToken(token); }
   }, []);
 
+  const handleFileType = useCallback((type: 'image' | 'video') => {
+    setFileType(type);
+    if (type === 'video' && mode === 'image') setMode('frames');
+    if (type === 'image' && mode !== 'image') setMode('image');
+  }, [mode]);
+
   const hasToken = mode === 'v2v' ? !!grokToken : !!codexToken;
 
-  // Add to queue
+  // Add to queue + auto-cleanup completed jobs (keep max 5)
   const addToQueue = () => {
     if (!file || !hasToken) return;
     const job = createJob(file, mode, style, customPrompt, fps);
-    setJobs(prev => [...prev, job]);
+    setJobs(prev => {
+      const completed = prev.filter(j => j.status === 'done' || j.status === 'error');
+      const active = prev.filter(j => j.status === 'queued' || j.status === 'generating');
+      const trimmed = completed.slice(0, 5);
+      return [...active, ...trimmed, job];
+    });
   };
 
   // Process queue
@@ -119,29 +131,34 @@ export default function Home() {
     processJob(next).then(async (result) => {
       setJobs(prev => prev.map(j => j.id === next.id ? { ...j, ...result, status: 'done' as const, completedAt: Date.now() } : j));
 
-      // Save to gallery
-      if (result.resultB64 || result.gifUrl) {
-        const b64ForThumb = result.resultB64 || '';
-        const thumb = b64ForThumb ? await makeThumbnail(b64ForThumb) : '';
-        const originalB64 = next.file.type.startsWith('image/')
-          ? await fileToB64(next.file)
-          : '';
-        await saveToGallery({
-          id: next.id,
-          timestamp: Date.now(),
-          fileName: next.fileName,
-          style: next.style,
-          mode: next.mode,
-          originalB64,
-          resultB64: result.resultB64,
-          thumbB64: thumb,
-        });
-        window.dispatchEvent(new Event('gallery-updated'));
+      // Save to gallery — isolated try/catch so failure doesn't poison job status
+      try {
+        if (result.resultB64 || result.gifUrl) {
+          const b64ForThumb = result.resultB64 || '';
+          const thumb = b64ForThumb ? await makeThumbnail(b64ForThumb) : '';
+          const originalB64 = next.file.type.startsWith('image/')
+            ? await fileToB64(next.file)
+            : '';
+          await saveToGallery({
+            id: next.id,
+            timestamp: Date.now(),
+            fileName: next.fileName,
+            style: next.style,
+            mode: next.mode,
+            originalB64,
+            resultB64: result.resultB64,
+            thumbB64: thumb,
+          });
+          window.dispatchEvent(new Event('gallery-updated'));
+        }
+      } catch (saveErr) {
+        console.warn('[gallery] save failed:', saveErr);
       }
-
-      processingRef.current = false;
     }).catch(err => {
-      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: err.message } : j));
+      setJobs(prev => prev.map(j => j.id === next.id ? { ...j, status: 'error' as const, error: err instanceof Error ? err.message : 'Unknown error' } : j));
+      setError(err instanceof Error ? err.message : 'Generation failed');
+      setPreviewState('error');
+    }).finally(() => {
       processingRef.current = false;
     });
   }, [jobs, codexToken, grokToken]);
@@ -286,11 +303,11 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto px-4 py-3">
           <div className="grid grid-cols-2 gap-3 mb-3">
             <Panel title="Upload">
-              <UploadZone file={file} onFile={setFile} mode={mode} onDuration={setVideoDuration} />
+              <UploadZone file={file} onFile={setFile} onFileType={handleFileType} onDuration={setVideoDuration} />
             </Panel>
             <Panel title="Settings">
               <div className="text-[9px] font-extrabold uppercase tracking-wider text-gray-500 mb-1">Mode</div>
-              <ModeSelector mode={mode} onMode={setMode} grokToken={grokToken} />
+              <ModeSelector mode={mode} onMode={setMode} grokToken={grokToken} fileType={fileType} />
               {mode === 'single' && keyframes.length > 0 && (
                 <>
                   <div className="text-[9px] font-extrabold uppercase tracking-wider text-gray-500 mt-3 mb-1">Keyframe</div>

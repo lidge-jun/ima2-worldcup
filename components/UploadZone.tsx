@@ -3,22 +3,18 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon, Film } from 'lucide-react';
 
-const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp';
-const VIDEO_ACCEPT = 'video/mp4,video/webm,video/quicktime';
+const ALL_ACCEPT = 'image/png,image/jpeg,image/webp,video/mp4,video/webm,video/quicktime';
 const IMAGE_MAX = 10 * 1024 * 1024;
 const VIDEO_MAX = 100 * 1024 * 1024;
 
-export default function UploadZone({ file, onFile, mode, onDuration }: {
+export default function UploadZone({ file, onFile, onFileType, onDuration }: {
   file: File | null;
   onFile: (f: File | null) => void;
-  mode: 'image' | 'frames' | 'single' | 'v2v';
+  onFileType?: (type: 'image' | 'video') => void;
   onDuration?: (d: number) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [duration, setDuration] = useState(0);
-  const acceptsVideo = mode !== 'image';
-  const accept = acceptsVideo ? `${IMAGE_ACCEPT},${VIDEO_ACCEPT}` : IMAGE_ACCEPT;
-  const maxSize = acceptsVideo ? VIDEO_MAX : IMAGE_MAX;
 
   useEffect(() => {
     if (!file || !file.type.startsWith('video/')) { setDuration(0); onDuration?.(0); return; }
@@ -34,13 +30,14 @@ export default function UploadZone({ file, onFile, mode, onDuration }: {
   }, [file, onDuration]);
 
   const handleFile = useCallback((f: File) => {
-    if (f.size > maxSize) { alert(`Max ${maxSize / 1024 / 1024}MB`); return; }
     const isImage = f.type.startsWith('image/');
     const isVideo = f.type.startsWith('video/');
     if (!isImage && !isVideo) { alert('Unsupported file type'); return; }
-    if (isVideo && !acceptsVideo) { alert('Select a video mode first'); return; }
+    const maxSize = isVideo ? VIDEO_MAX : IMAGE_MAX;
+    if (f.size > maxSize) { alert(`Max ${maxSize / 1024 / 1024}MB`); return; }
     onFile(f);
-  }, [onFile, maxSize, acceptsVideo]);
+    onFileType?.(isVideo ? 'video' : 'image');
+  }, [onFile, onFileType]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -77,16 +74,14 @@ export default function UploadZone({ file, onFile, mode, onDuration }: {
       onDragOver={e => e.preventDefault()}
     >
       <Upload size={36} className="mx-auto mb-2 opacity-60" />
-      <div className="text-sm font-extrabold">
-        {acceptsVideo ? 'Drop video or image' : 'Drop image here'}
-      </div>
+      <div className="text-sm font-extrabold">Drop video or image</div>
       <div className="text-[10px] text-gray-500 font-semibold mt-1">
-        {acceptsVideo ? 'MP4 · WebM · MOV · PNG · JPG — max 100MB' : 'PNG · JPG · WebP — max 10MB'}
+        MP4 · WebM · MOV · PNG · JPG — max 100MB
       </div>
       <input
         ref={inputRef}
         type="file"
-        accept={accept}
+        accept={ALL_ACCEPT}
         className="hidden"
         onChange={e => {
           const f = e.target.files?.[0];
