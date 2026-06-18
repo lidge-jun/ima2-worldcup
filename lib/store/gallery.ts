@@ -11,7 +11,7 @@ export interface GalleryItem {
   originalB64: string;
   resultB64?: string;
   gifBlob?: Blob;
-  videoUrl?: string;
+  videoBlob?: Blob;
   thumbB64: string;
 }
 

@@ -14,6 +14,7 @@ export interface Job {
   resultB64?: string;
   gifUrl?: string;
   videoUrl?: string;
+  videoBlob?: Blob;
   error?: string;
   createdAt: number;
   completedAt?: number;

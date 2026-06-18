@@ -145,7 +145,7 @@ export default function Home() {
       processJob(next).then(async (result) => {
         setJobs(prev => prev.map(j => j.id === next.id ? { ...j, ...result, status: 'done' as const, completedAt: Date.now() } : j));
         try {
-          if (result.resultB64 || result.gifUrl) {
+          if (result.resultB64 || result.videoBlob) {
             const b64ForThumb = result.resultB64 || '';
             const thumb = b64ForThumb ? await makeThumbnail(b64ForThumb) : '';
             const originalB64 = next.file.type.startsWith('image/')
@@ -154,6 +154,7 @@ export default function Home() {
               id: next.id, timestamp: Date.now(), fileName: next.fileName,
               style: next.style, mode: next.mode, originalB64,
               resultB64: result.resultB64, thumbB64: thumb,
+              videoBlob: result.videoBlob,
             });
             window.dispatchEvent(new Event('gallery-updated'));
           }
@@ -223,10 +224,10 @@ export default function Home() {
       });
 
       const { assembleVideo } = await import('@/lib/ffmpeg/assemble');
-      const videoBlob = await assembleVideo(blobs, job.fps, job.id);
-      const url = URL.createObjectURL(videoBlob);
+      const vBlob = await assembleVideo(blobs, job.fps, job.id);
+      const url = URL.createObjectURL(vBlob);
       if (isActiveJob(job.id)) { setVideoUrl(url); setPreviewState('done'); }
-      return { videoUrl: url, resultB64: doneFrames[0]?.styledB64 };
+      return { videoUrl: url, videoBlob: vBlob, resultB64: doneFrames[0]?.styledB64 };
     }
 
     if (job.mode === 'single') {
@@ -304,12 +305,17 @@ export default function Home() {
 
   const handleGallerySelect = (item: GalleryItem) => {
     setSelectedGallery(item);
-    if (item.resultB64) {
+    setStyledFrames([]); setProgress(undefined); setError('');
+    if (item.videoBlob) {
+      const url = URL.createObjectURL(item.videoBlob);
+      setVideoUrl(url); setGifUrl(''); setResultB64(item.resultB64 || '');
+      setResultKind('video');
+    } else if (item.resultB64) {
       setResultB64(item.resultB64);
       setResultKind('image');
-      setPreviewState('done');
       setGifUrl(''); setVideoUrl('');
     }
+    setPreviewState('done');
   };
 
   const canGenerate = hasToken && !!file;
