@@ -8,6 +8,12 @@ export async function GET() {
     authMode: 'none',
   };
 
+  // Skip proxy check on Vercel — proxy is local-only
+  if (process.env.VERCEL) {
+    result.authMode = 'apikey';
+    return NextResponse.json(result);
+  }
+
   try {
     const res = await fetch(`${OAUTH_PROXY}/v1/models`, { signal: AbortSignal.timeout(2000) });
     if (res.ok) {
