@@ -11,6 +11,7 @@ import FpsSlider from '@/components/FpsSlider';
 import KeyframePicker from '@/components/KeyframePicker';
 import GrokProgress from '@/components/GrokProgress';
 import PreviewPanel from '@/components/PreviewPanel';
+import AuthModal from '@/components/AuthModal';
 import { getCodexToken, saveCodexToken, getGrokToken, saveGrokToken } from '@/lib/auth';
 import type { Frame, StyledFrame } from '@/lib/ffmpeg/types';
 import type { V2VProgress } from '@/lib/grok/v2v';
@@ -39,10 +40,19 @@ export default function Home() {
   const [error, setError] = useState('');
   const [keyframes, setKeyframes] = useState<Frame[]>([]);
   const [selectedKeyframe, setSelectedKeyframe] = useState(0);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
-    setCodexToken(getCodexToken());
-    setGrokToken(getGrokToken());
+    const ct = getCodexToken();
+    const gt = getGrokToken();
+    if (ct) setCodexToken(ct);
+    if (gt) setGrokToken(gt);
+    if (!ct) {
+      fetch('/api/detect-auth').then(r => r.json()).then(d => {
+        if (d.codexToken) { saveCodexToken(d.codexToken); setCodexToken(d.codexToken); }
+        if (d.grokToken) { saveGrokToken(d.grokToken); setGrokToken(d.grokToken); }
+      }).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -258,11 +268,18 @@ export default function Home() {
               error={error}
               onDownload={handleDownload}
               onRetry={handleGenerate}
-              onAuth={() => {}}
+              onAuth={() => setShowAuthModal(true)}
             />
           )}
         </Panel>
       </div>
+
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onSave={handleToken}
+        />
+      )}
     </main>
   );
 }
