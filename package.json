@@ -1,8 +1,9 @@
 {
   "name": "ima2-worldcup",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI style transfer for sports highlights — turn World Cup clips into copyright-safe crayon/watercolor art",
   "type": "module",
+  "author": "lidge-jun",
   "bin": {
     "ima2w": "bin/ima2w.mjs"
   },
