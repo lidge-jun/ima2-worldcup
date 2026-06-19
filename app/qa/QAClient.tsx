@@ -96,7 +96,7 @@ async function generateStyled(srcB64: string, style: string): Promise<string> {
   return data.resultB64 as string;
 }
 
-export default function QAPage() {
+export default function QAClient() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [done, setDone] = useState(false);
 
